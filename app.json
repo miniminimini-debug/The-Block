@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "Your Block",
+    "slug": "your-block",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0D14"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.theblock.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D0D14"
+      },
+      "package": "com.theblock.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static",
+      "name": "The Block",
+      "shortName": "The Block",
+      "description": "your private photo neighborhood",
+      "backgroundColor": "#08080F",
+      "themeColor": "#08080F",
+      "lang": "en",
+      "display": "standalone"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        { "cameraPermission": "The Block needs camera access to share real moments." }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "The Block uses location to add context to your memories."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#9B8FFF"
+        }
+      ],
+      "expo-font"
+    ],
+    "scheme": "theblock",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
