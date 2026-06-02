@@ -180,14 +180,15 @@ export function useCreateScrapbook() {
       if (error || !book) throw error ?? new Error('failed');
 
       const uniqueIds = Array.from(new Set([userId, ...memberIds]));
-      await supabase.from('scrapbook_members').insert(
+      const { error: memberError } = await supabase.from('scrapbook_members').insert(
         uniqueIds.map((uid) => ({ scrapbook_id: book.id, user_id: uid })),
       );
+      if (memberError) throw memberError;
 
-      // Create first page
-      await supabase.from('scrapbook_pages').insert({
+      const { error: pageError } = await supabase.from('scrapbook_pages').insert({
         scrapbook_id: book.id, page_number: 1, layout: 'collage',
       });
+      if (pageError) throw pageError;
 
       return book.id as string;
     },

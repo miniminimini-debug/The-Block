@@ -6,24 +6,34 @@
 
 -- ─── Security-definer helpers (returns uuid[] so = any() works in policies) ───
 create or replace function public.my_scrapbook_ids()
-returns uuid[] language sql security definer stable as $$
-  select array(select scrapbook_id from public.scrapbook_members where user_id = auth.uid());
+returns uuid[] language sql security definer stable
+set search_path = public as $$
+  select array(select scrapbook_id from scrapbook_members where user_id = auth.uid());
 $$;
 
 create or replace function public.my_capsule_ids()
-returns uuid[] language sql security definer stable as $$
-  select array(select capsule_id from public.capsule_members where user_id = auth.uid());
+returns uuid[] language sql security definer stable
+set search_path = public as $$
+  select array(select capsule_id from capsule_members where user_id = auth.uid());
 $$;
 
 create or replace function public.my_board_ids()
-returns uuid[] language sql security definer stable as $$
-  select array(select board_id from public.cork_board_members where user_id = auth.uid());
+returns uuid[] language sql security definer stable
+set search_path = public as $$
+  select array(select board_id from cork_board_members where user_id = auth.uid());
 $$;
 
 create or replace function public.my_pass_ids()
-returns uuid[] language sql security definer stable as $$
-  select array(select pass_id from public.pass_participants where user_id = auth.uid());
+returns uuid[] language sql security definer stable
+set search_path = public as $$
+  select array(select pass_id from pass_participants where user_id = auth.uid());
 $$;
+
+-- Grant execute to the roles Supabase uses for API requests
+grant execute on function public.my_scrapbook_ids() to authenticated, anon;
+grant execute on function public.my_capsule_ids()   to authenticated, anon;
+grant execute on function public.my_board_ids()     to authenticated, anon;
+grant execute on function public.my_pass_ids()      to authenticated, anon;
 
 -- ─── Drop EVERY policy on affected tables (handles any naming convention) ─────
 -- Multiple schema files created policies with different names; this clears all.

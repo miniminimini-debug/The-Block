@@ -330,7 +330,18 @@ export default function CapsuleScreen() {
     );
   }
 
-  if (!capsule) return null;
+  if (!capsule) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#08080F', alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 32 }}>
+        <Text style={{ fontSize: 15, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center' }}>
+          couldn't load this capsule
+        </Text>
+        <Pressable onPress={() => router.back()} style={{ paddingVertical: 12, paddingHorizontal: 24, backgroundColor: '#12121C', borderRadius: 14, borderWidth: 1, borderColor: '#2E2E48' }}>
+          <Text style={{ fontSize: 14, color: '#A99BFF', fontFamily: 'Inter_600SemiBold' }}>go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#08080F' }}>
