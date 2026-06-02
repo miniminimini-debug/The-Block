@@ -347,6 +347,7 @@ export interface ScrapbookItem {
   fontColor?: string;
   stickerId?: string;
   slotIndex?: number; // for photos: which slot (0-3) in the 2x2 grid
+  isDeveloping?: boolean; // true while the post is still in development delay
   creator?: { username: string; display_name: string | null; avatar_emoji: string | null };
 }
 

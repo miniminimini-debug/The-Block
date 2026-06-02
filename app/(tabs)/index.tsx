@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,13 +11,34 @@ import { useDarkroom, useDeveloping } from '@hooks/useDevelopingQueue';
 import { useRevealStore } from '@stores/reveal.store';
 import { useMyDeskDrops } from '@hooks/useDeskDrops';
 import { useMyPasses } from '@hooks/useCameraPass';
-import { DevelopingQueue } from '@/components/polaroid/DevelopingQueue';
 import { RevealCeremony } from '@/components/polaroid/RevealCeremony';
 import { Avatar } from '@ui/Avatar';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '@hooks/useTheme';
 import { type TimeOfDay } from '@lib/theme';
 import { Image } from 'expo-image';
+
+// Small countdown label for still-developing letters
+function IncomingCountdown({ developedAt }: { developedAt: string }) {
+  const [label, setLabel] = useState('');
+  useEffect(() => {
+    const update = () => {
+      const diff = new Date(developedAt).getTime() - Date.now();
+      if (diff <= 0) { setLabel('ready'); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setLabel(h > 0 ? `${h}h ${m}m` : `${m}m`);
+    };
+    update();
+    const t = setInterval(update, 30000);
+    return () => clearInterval(t);
+  }, [developedAt]);
+  return (
+    <View style={{ backgroundColor: 'rgba(0,0,0,0.07)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}>
+      <Text style={{ fontSize: 11, color: '#6B5A48', fontFamily: 'Inter_500Medium' }}>{label}</Text>
+    </View>
+  );
+}
 
 const SKY_GRADIENTS: Record<TimeOfDay, readonly [string, string, string]> = {
   night: ['#06060E', '#0C0C20', '#1A1445'],
@@ -377,7 +398,7 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Developing queue */}
+        {/* Incoming polaroids — letter cards with blurred photos */}
         <AnimatePresence>
           {hasActivity && (
             <MotiView
@@ -386,9 +407,87 @@ export default function HomeScreen() {
               animate={{ opacity: 1, translateY: 0 }}
               exit={{ opacity: 0, translateY: -8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 200 }}
-              style={{ marginBottom: 20 }}
+              style={{ paddingHorizontal: 20, marginBottom: 20 }}
             >
-              <DevelopingQueue onSeeAll={() => router.navigate('/(tabs)/memories')} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <Text style={{ fontSize: 11, color: theme.textDim, fontFamily: 'Inter_600SemiBold', letterSpacing: 1, textTransform: 'uppercase' }}>
+                  incoming
+                </Text>
+                <Pressable onPress={() => router.navigate('/(tabs)/memories')}>
+                  <Text style={{ fontSize: 12, color: theme.accent, fontFamily: 'Inter_500Medium' }}>see all</Text>
+                </Pressable>
+              </View>
+
+              {[...darkroom.map((p) => ({ post: p, ready: true })), ...developing.map((p) => ({ post: p, ready: false }))].map(({ post, ready }, i) => (
+                <MotiView
+                  key={post.postId}
+                  from={{ opacity: 0, translateY: 6 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ delay: i * 60, type: 'spring', damping: 22 }}
+                  style={{ marginBottom: 10 }}
+                >
+                  <Pressable
+                    onPress={() => {
+                      if (!ready) return;
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      useRevealStore.getState().openCeremony(post);
+                    }}
+                  >
+                    <View style={{ backgroundColor: '#F5F0E6', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(0,0,0,0.07)', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4 }}>
+                      {/* Envelope flap */}
+                      <View style={{ height: 24, backgroundColor: '#EDE8DC', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' }}>
+                        <View style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0, borderLeftWidth: 0, borderRightWidth: 90, borderBottomWidth: 24, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: '#EDE8DC' }} />
+                        <View style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderRightWidth: 0, borderLeftWidth: 90, borderBottomWidth: 24, borderRightColor: 'transparent', borderLeftColor: 'transparent', borderBottomColor: '#EDE8DC' }} />
+                        <View style={{ position: 'absolute', top: 0, left: '50%', width: 1, height: 24, backgroundColor: 'rgba(0,0,0,0.05)' }} />
+                      </View>
+
+                      {/* Body */}
+                      <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        {/* Blurred photo thumbnail */}
+                        <View style={{ width: 54, height: 54, borderRadius: 6, overflow: 'hidden', backgroundColor: '#C5B89A' }}>
+                          {(post.thumbnailUrl || post.imageUrl) ? (
+                            <Image
+                              source={{ uri: post.thumbnailUrl ?? post.imageUrl }}
+                              style={{ width: '100%', height: '100%' }}
+                              contentFit="cover"
+                              blurRadius={ready ? 6 : 26}
+                            />
+                          ) : (
+                            <View style={{ flex: 1, backgroundColor: '#C5B89A' }} />
+                          )}
+                          {!ready && (
+                            <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: '#C9A96E', opacity: 0.4 }} />
+                          )}
+                          {ready && (
+                            <MotiView
+                              from={{ opacity: 0 }} animate={{ opacity: [0, 0.35, 0] }}
+                              transition={{ type: 'timing', duration: 1800, loop: true }}
+                              style={{ ...StyleSheet.absoluteFillObject, backgroundColor: theme.accent }}
+                            />
+                          )}
+                        </View>
+
+                        <View style={{ flex: 1, gap: 3 }}>
+                          <Text style={{ fontSize: 14, color: '#1A1208', fontFamily: 'Inter_600SemiBold' }}>
+                            {post.senderDisplayName ?? post.senderUsername}
+                          </Text>
+                          <Text style={{ fontSize: 12, color: '#6B5A48', fontFamily: 'Inter_400Regular' }}>
+                            {ready ? 'polaroid ready to open' : 'still developing...'}
+                          </Text>
+                        </View>
+
+                        {ready ? (
+                          <View style={{ backgroundColor: theme.accentDim, borderWidth: 1, borderColor: theme.accent, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
+                            <Text style={{ fontSize: 12, color: theme.accentLight, fontFamily: 'Inter_600SemiBold' }}>open</Text>
+                          </View>
+                        ) : (
+                          <IncomingCountdown developedAt={post.developedAt} />
+                        )}
+                      </View>
+                    </View>
+                  </Pressable>
+                </MotiView>
+              ))}
             </MotiView>
           )}
         </AnimatePresence>

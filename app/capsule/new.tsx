@@ -133,10 +133,15 @@ export default function NewCapsuleScreen() {
 
         {/* Create button */}
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 24, paddingBottom: insets.bottom + 16, paddingTop: 16, backgroundColor: '#08080F', borderTopWidth: 1, borderTopColor: '#1A1A28' }}>
+          {!canCreate && (
+            <Text style={{ fontSize: 12, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center', marginBottom: 8 }}>
+              give your capsule a name first
+            </Text>
+          )}
           <Pressable
             onPress={handleCreate}
             disabled={!canCreate || isPending}
-            style={{ borderRadius: 18, paddingVertical: 18, alignItems: 'center', backgroundColor: canCreate ? '#6B52E0' : '#2E2E48', opacity: canCreate ? 1 : 0.6 }}
+            style={{ borderRadius: 18, paddingVertical: 18, alignItems: 'center', backgroundColor: canCreate ? '#6B52E0' : '#2E2E48', opacity: canCreate ? 1 : 0.5 }}
           >
             {isPending
               ? <ActivityIndicator color="#A99BFF" />

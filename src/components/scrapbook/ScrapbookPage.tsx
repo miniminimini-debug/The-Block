@@ -166,14 +166,24 @@ export function ScrapbookPageView({
                           source={{ uri: photo.imageUrl }}
                           style={StyleSheet.absoluteFill}
                           contentFit="cover"
+                          blurRadius={photo.isDeveloping ? 24 : 0}
                         />
                       ) : (
                         <View style={s.empty}>
                           <Text style={{ fontSize: 18, color: 'rgba(0,0,0,0.13)' }}>+</Text>
                         </View>
                       )}
+                      {/* Sepia wash + developing label */}
+                      {photo?.isDeveloping && (
+                        <>
+                          <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: '#C9A96E', opacity: 0.45 }} />
+                          <View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ fontSize: 8, color: '#2A1F0F', fontFamily: 'Inter_500Medium', letterSpacing: 0.8 }}>developing...</Text>
+                          </View>
+                        </>
+                      )}
                       <CornerMounts />
-                      <FilmGrainOverlay opacity={0.07} />
+                      <FilmGrainOverlay opacity={photo?.isDeveloping ? 0.16 : 0.07} />
                     </View>
                     <View style={{ height: stripH }} />
                   </Pressable>

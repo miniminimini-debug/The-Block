@@ -21,7 +21,7 @@ import { ALL_STICKERS } from '@lib/stickers';
 import type { ScrapbookPage, ScrapbookItem } from '@types/models';
 
 function postsToPages(
-  posts: { id: string; imageUrl: string | null; createdAt: string }[],
+  posts: { id: string; imageUrl: string | null; createdAt: string; isDeveloping?: boolean }[],
   sbId: string,
 ): ScrapbookPage[] {
   if (!posts.length) return [];
@@ -52,6 +52,7 @@ function postsToPages(
         createdAt: post.createdAt,
         itemType: 'photo',
         slotIndex: si,
+        isDeveloping: post.isDeveloping,
       })),
     });
   }
@@ -113,7 +114,12 @@ export default function ScrapbookScreen() {
   const myPicsPages = useMemo((): ScrapbookPage[] => {
     if (!isMyPics) return [];
     return postsToPages(
-      (rawMyPosts ?? []).map((p: any) => ({ id: p.id, imageUrl: p.image_url as string | null, createdAt: p.created_at as string })),
+      (rawMyPosts ?? []).map((p: any) => ({
+        id: p.id,
+        imageUrl: p.image_url as string | null,
+        createdAt: p.created_at as string,
+        isDeveloping: p.development_status === 'developing',
+      })),
       'my-pics',
     );
   }, [isMyPics, rawMyPosts]);
@@ -342,6 +348,12 @@ export default function ScrapbookScreen() {
                 <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 20 }}>
                   every polaroid you send to friends collects here automatically
                 </Text>
+                <Pressable
+                  onPress={() => router.push('/(tabs)/camera' as any)}
+                  style={{ marginTop: 4, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#2A2040', borderRadius: 14, borderWidth: 1, borderColor: '#6B52E0' }}
+                >
+                  <Text style={{ color: '#B8AEFF', fontFamily: 'Inter_600SemiBold' }}>send a polaroid</Text>
+                </Pressable>
               </>
             )}
             {isFriends && (
@@ -352,20 +364,12 @@ export default function ScrapbookScreen() {
                 </Text>
               </>
             )}
-            {isPhotoBooth && (
-              <>
-                <Text style={{ fontSize: 15, color: '#EEEEF8', fontFamily: 'Inter_600SemiBold', textAlign: 'center' }}>your photo booth strips</Text>
-                <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 20 }}>
-                  every photo booth session you take gets saved here
-                </Text>
-              </>
-            )}
             {!isSpecial && (
               <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center' }}>
                 this scrapbook is empty
               </Text>
             )}
-            {canEdit && (
+            {canEdit && !isSpecial && (
               <Pressable
                 onPress={handleAddPage}
                 style={{ marginTop: 4, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#2A2040', borderRadius: 14, borderWidth: 1, borderColor: '#6B52E0' }}
@@ -373,6 +377,20 @@ export default function ScrapbookScreen() {
                 <Text style={{ color: '#B8AEFF', fontFamily: 'Inter_600SemiBold' }}>add first page</Text>
               </Pressable>
             )}
+          </View>
+        ) : isPhotoBooth && Object.keys(boothSlots).length === 0 ? (
+          /* Photo booth — no strips yet */
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 40 }}>
+            <Text style={{ fontSize: 15, color: '#EEEEF8', fontFamily: 'Inter_600SemiBold', textAlign: 'center' }}>your photo booth strips</Text>
+            <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 20 }}>
+              every photo booth session you take gets saved here
+            </Text>
+            <Pressable
+              onPress={() => router.push('/(tabs)/camera' as any)}
+              style={{ marginTop: 4, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#2A2040', borderRadius: 14, borderWidth: 1, borderColor: '#6B52E0' }}
+            >
+              <Text style={{ color: '#B8AEFF', fontFamily: 'Inter_600SemiBold' }}>open photo booth</Text>
+            </Pressable>
           </View>
         ) : isPhotoBooth ? (
           <View style={{ flex: 1 }}>
