@@ -269,29 +269,28 @@ const strip = StyleSheet.create({
   },
 });
 
-// ── Minimalist capsule icon ───────────────────────────────────────────────────
+// ── Minimalist lock icon ─────────────────────────────────────────────────────
 function CapsuleIcon({ color, dimColor }: { color: string; dimColor: string }) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', width: 44, height: 72 }}>
-      {/* Capsule body */}
+    <View style={{ alignItems: 'center', justifyContent: 'center', height: 72 }}>
+      {/* Shackle — thin U arch */}
       <View style={{
-        width: 36, height: 64,
-        borderRadius: 18,
-        borderWidth: 1.5, borderColor: color,
+        width: 20, height: 12,
+        borderTopLeftRadius: 10, borderTopRightRadius: 10,
+        borderWidth: 2, borderColor: color,
+        borderBottomWidth: 0,
+        marginBottom: -1,
+      }} />
+      {/* Body — clean rectangle */}
+      <View style={{
+        width: 28, height: 20,
+        borderRadius: 5,
         backgroundColor: dimColor,
-        overflow: 'hidden',
-        alignItems: 'center',
+        borderWidth: 1.5, borderColor: color,
+        alignItems: 'center', justifyContent: 'center',
       }}>
-        {/* Seal band */}
-        <View style={{ position: 'absolute', top: '45%', left: 0, right: 0, height: 1.5, backgroundColor: color, opacity: 0.6 }} />
-        {/* Top half dots */}
-        <View style={{ position: 'absolute', top: '18%', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 }}>
-          {[0,1,2].map((n) => <View key={n} style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, opacity: 0.45 }} />)}
-        </View>
-        {/* Bottom half dots */}
-        <View style={{ position: 'absolute', top: '64%', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 }}>
-          {[0,1,2].map((n) => <View key={n} style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, opacity: 0.3 }} />)}
-        </View>
+        {/* Single dot keyhole */}
+        <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: color, opacity: 0.7 }} />
       </View>
     </View>
   );

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import {
   View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView,
-  Platform, ActivityIndicator, Alert,
+  Platform, ActivityIndicator,
 } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import * as Haptics from 'expo-haptics';
@@ -40,20 +40,16 @@ export function PostComposer({ isOneShot = false }: { isOneShot?: boolean }) {
     reset();
   };
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!captureUri || selectedRecipientIds.length === 0) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      await createPost({
-        imageUri: captureUri,
-        note: note || undefined,
-        mood: null,
-        recipientIds: selectedRecipientIds,
-        developmentDelay,
-      });
-    } catch (err: any) {
-      Alert.alert('Could not send', err?.message ?? 'Something went wrong. Try again.');
-    }
+    createPost({
+      imageUri: captureUri,
+      note: note || undefined,
+      mood: null,
+      recipientIds: selectedRecipientIds,
+      developmentDelay,
+    });
   };
 
   if (!captureUri) return null;

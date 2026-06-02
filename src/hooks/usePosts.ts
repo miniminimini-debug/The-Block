@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert } from 'react-native';
 import { supabase } from '@lib/supabase';
 import { uploadPostPhoto } from '@lib/storage';
 import { queryKeys } from '@lib/queryClient';
@@ -50,12 +51,11 @@ export function useCreatePost() {
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.session?.user.id);
   const setUploadProgress = useCameraStore((s) => s.setUploadProgress);
-  const setStage = useCameraStore((s) => s.setStage);
+  const reset = useCameraStore((s) => s.reset);
 
   return useMutation({
     mutationFn: async (input: CreatePostInput) => {
       if (!userId) throw new Error('Not authenticated');
-      setStage('uploading');
 
       const postId = crypto.randomUUID();
       const delayMins = delayToMinutes(input.developmentDelay);
@@ -94,11 +94,16 @@ export function useCreatePost() {
       return { postId, delayMins };
     },
     onSuccess: () => {
-      setStage('sent');
+      // Close the composer and reset camera so the user is back at the viewfinder
+      reset();
       queryClient.invalidateQueries({ queryKey: queryKeys.posts(userId ?? '') });
     },
-    onError: () => {
-      setStage('composer');
+    onError: (err: any) => {
+      reset();
+      Alert.alert(
+        'Could not send',
+        err?.message ?? 'Check your connection and try again.',
+      );
     },
   });
 }

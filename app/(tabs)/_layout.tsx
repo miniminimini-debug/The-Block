@@ -12,6 +12,7 @@ function HomeIcon({ active }: { active: boolean }) {
   const c = active ? '#A99BFF' : '#5A5A7A';
   return (
     <View style={{ width: IC, height: IC, alignItems: 'center', justifyContent: 'center' }}>
+      {/* Roof triangle */}
       <View style={{
         width: 0, height: 0,
         borderStyle: 'solid',
@@ -20,20 +21,28 @@ function HomeIcon({ active }: { active: boolean }) {
         borderBottomColor: c,
         marginBottom: -1,
       }} />
-      <View style={{ width: 16, height: 12, backgroundColor: c, opacity: 0.7, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}>
-        <View style={{ position: 'absolute', bottom: 0, left: 4, width: 7, height: 8, borderTopLeftRadius: 3, borderTopRightRadius: 3, backgroundColor: active ? '#1A1240' : '#08080F' }} />
-      </View>
+      {/* Body — no door cutout */}
+      <View style={{ width: 16, height: 12, backgroundColor: c, opacity: 0.75, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }} />
     </View>
   );
 }
 
 function ShelfIcon({ active }: { active: boolean }) {
   const c = active ? '#A99BFF' : '#5A5A7A';
+  // Three upright books of similar heights, side by side
+  const books = [
+    { h: 17, w: 6, opacity: 1.0 },
+    { h: 15, w: 5, opacity: 0.75 },
+    { h: 16, w: 6, opacity: 0.9 },
+  ];
   return (
-    <View style={{ width: IC, height: IC, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{ width: 22, height: 22, borderRadius: 3, borderWidth: 2, borderColor: c, overflow: 'hidden', flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 2, paddingBottom: 2, gap: 1 }}>
-        {[10, 8, 13, 7, 10].map((h, i) => (
-          <View key={i} style={{ flex: 1, height: h, borderRadius: 1, backgroundColor: c, opacity: 0.55 + i * 0.1 }} />
+    <View style={{ width: IC, height: IC, alignItems: 'center', justifyContent: 'flex-end' }}>
+      {/* Shelf base line */}
+      <View style={{ position: 'absolute', bottom: 1, left: 2, right: 2, height: 1.5, backgroundColor: c, borderRadius: 1, opacity: 0.6 }} />
+      {/* Books */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 2, paddingBottom: 2 }}>
+        {books.map((b, i) => (
+          <View key={i} style={{ width: b.w, height: b.h, borderRadius: 1.5, backgroundColor: c, opacity: b.opacity }} />
         ))}
       </View>
     </View>

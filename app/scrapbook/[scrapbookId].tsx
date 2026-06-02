@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, Pressable, ActivityIndicator, StyleSheet,
   Modal, TextInput, Platform, ScrollView,
@@ -99,6 +99,11 @@ export default function ScrapbookScreen() {
   const [demoPages, setDemoPages] = useState<ScrapbookPage[]>(() => [
     makeDemoPage(1, scrapbookId ?? 'demo'),
   ]);
+
+  // Clear booth store on open so it starts empty each time
+  useEffect(() => {
+    if (isPhotoBooth) boothStore.clear();
+  }, [isPhotoBooth]);
 
   const [textModalVisible, setTextModalVisible] = useState(false);
   const [stickerModalVisible, setStickerModalVisible] = useState(false);
@@ -370,10 +375,35 @@ export default function ScrapbookScreen() {
             )}
           </View>
         ) : isPhotoBooth ? (
-          <PhotoBoothStripView
-            slots={boothSlots}
-            bgColor={boothBg ?? '#FFFDF5'}
-          />
+          <View style={{ flex: 1 }}>
+            <PhotoBoothStripView
+              slots={boothSlots}
+              bgColor={boothBg ?? '#FFFDF5'}
+            />
+            {/* Overlay stickers and text on top of the strip */}
+            {(demoPages[0]?.items ?? []).filter((it) => it.itemType === 'sticker' || it.itemType === 'text').map((item) => (
+              <View
+                key={item.id}
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: `${item.posX}%` as any,
+                  top: `${item.posY}%` as any,
+                  transform: [{ rotate: `${item.rotation}deg` }],
+                }}
+              >
+                {item.itemType === 'sticker' && item.stickerId ? (
+                  <Text style={{ fontSize: 36 }}>
+                    {ALL_STICKERS.find((s) => s.id === item.stickerId)?.emoji ?? ''}
+                  </Text>
+                ) : item.itemType === 'text' && item.textContent ? (
+                  <Text style={{ fontFamily: 'Caveat_400Regular', fontSize: 28, color: item.fontColor ?? '#1A1208' }}>
+                    {item.textContent}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
         ) : (
           <PageTurn
             pages={pages}

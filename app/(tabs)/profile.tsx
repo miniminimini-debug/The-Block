@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View, Text, Pressable, ScrollView, StyleSheet,
   Platform, Switch, Alert,
@@ -8,6 +8,7 @@ import { MotiView, AnimatePresence } from 'moti';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import { PolaroidCropModal } from '@/components/board/PolaroidCropModal';
 import { router } from 'expo-router';
 import { useAuthStore } from '@stores/auth.store';
 import { isDemoMode } from '@lib/demo';
@@ -86,6 +87,7 @@ export default function ProfileScreen() {
 
   const [codeCopied, setCodeCopied] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(user?.avatar_url ?? null);
+  const [cropUri, setCropUri] = useState<string | null>(null);
 
   // Settings state
   const [notifPosts,      setNotifPosts]      = useState(true);
@@ -109,18 +111,17 @@ export default function ProfileScreen() {
       input.accept = 'image/*';
       input.onchange = (e: any) => {
         const file = e.target.files?.[0];
-        if (file) setLocalAvatarUri(URL.createObjectURL(file));
+        if (file) setCropUri(URL.createObjectURL(file));
       };
       input.click();
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, aspect: [1, 1], quality: 0.85,
+      quality: 0.9,
     });
     if (!result.canceled && result.assets[0]) {
-      setLocalAvatarUri(result.assets[0].uri);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCropUri(result.assets[0].uri);
     }
   };
 
@@ -243,6 +244,18 @@ export default function ProfileScreen() {
           </Pressable>
         </MotiView>
       </ScrollView>
+
+      {/* Photo crop modal */}
+      <PolaroidCropModal
+        visible={!!cropUri}
+        imageUri={cropUri}
+        onConfirm={(uri) => {
+          setLocalAvatarUri(uri);
+          setCropUri(null);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }}
+        onCancel={() => setCropUri(null)}
+      />
     </View>
   );
 }

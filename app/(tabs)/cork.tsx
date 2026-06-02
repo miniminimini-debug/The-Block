@@ -22,13 +22,63 @@ const NOTE_COLORS = ['#F5E6A3', '#A8D8A8', '#B0C4DE', '#FFB3BA', '#FFD8A8', '#E8
 
 // Radial actions — appear above the FAB when expanded
 const ACTIONS = [
-  { id: 'photo',   emoji: '📷', label: 'photo'   },
-  { id: 'note',    emoji: '✏️', label: 'note'    },
-  { id: 'sticker', emoji: '🌸', label: 'sticker' },
-  { id: 'delete',  emoji: '🗑', label: 'delete'  },
+  { id: 'photo',   label: 'photo'   },
+  { id: 'note',    label: 'note'    },
+  { id: 'sticker', label: 'sticker' },
+  { id: 'delete',  label: 'delete'  },
 ] as const;
 
 type ActionId = typeof ACTIONS[number]['id'];
+
+// Geometric icon per action (no emojis)
+function FabIcon({ id, active }: { id: ActionId; active?: boolean }) {
+  const c = active ? '#FFF' : 'rgba(60,35,12,0.7)';
+  if (id === 'photo') {
+    // Camera outline
+    return (
+      <View style={{ width: 22, height: 16, borderRadius: 3, borderWidth: 1.5, borderColor: c, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 7, height: 7, borderRadius: 3.5, borderWidth: 1.5, borderColor: c }} />
+        <View style={{ position: 'absolute', top: -5, left: 3, width: 6, height: 4, borderTopLeftRadius: 2, borderTopRightRadius: 2, borderWidth: 1.5, borderColor: c, borderBottomWidth: 0 }} />
+      </View>
+    );
+  }
+  if (id === 'note') {
+    // Pencil / two horizontal lines
+    return (
+      <View style={{ gap: 4 }}>
+        <View style={{ width: 18, height: 1.5, backgroundColor: c, borderRadius: 1 }} />
+        <View style={{ width: 13, height: 1.5, backgroundColor: c, borderRadius: 1 }} />
+        <View style={{ width: 16, height: 1.5, backgroundColor: c, borderRadius: 1 }} />
+      </View>
+    );
+  }
+  if (id === 'sticker') {
+    // 4-petal flower dot
+    return (
+      <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+        {[0, 90, 180, 270].map((deg) => (
+          <View key={deg} style={{
+            position: 'absolute',
+            width: 6, height: 10, borderRadius: 3,
+            backgroundColor: c,
+            transform: [{ rotate: `${deg}deg` }, { translateY: -5 }],
+          }} />
+        ))}
+        <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: c, position: 'absolute' }} />
+      </View>
+    );
+  }
+  if (id === 'delete') {
+    // Trash bin outline
+    return (
+      <View style={{ alignItems: 'center', gap: 1 }}>
+        <View style={{ width: 14, height: 1.5, backgroundColor: c, borderRadius: 1 }} />
+        <View style={{ width: 10, height: 12, borderRadius: 2, borderWidth: 1.5, borderColor: c, borderTopWidth: 0 }} />
+      </View>
+    );
+  }
+  return null;
+}
 
 export default function CorkScreen() {
   const insets = useSafeAreaInsets();
@@ -255,10 +305,18 @@ export default function CorkScreen() {
         ))}
       </View>
 
-      {/* ── Radial FAB ──────────────────────────────────────────────────────── */}
-      <View style={{ position: 'absolute', bottom: FAB_BOTTOM, right: FAB_RIGHT }}>
+      {/* Backdrop — rendered BEFORE the FAB so it's below the circles */}
+      {fabOpen && (
+        <Pressable
+          style={[StyleSheet.absoluteFill, { zIndex: 10 }]}
+          onPress={() => { setFabOpen(false); }}
+        />
+      )}
 
-        {/* Mini action circles — animate outward */}
+      {/* ── Radial FAB ──────────────────────────────────────────────────────── */}
+      <View style={{ position: 'absolute', bottom: FAB_BOTTOM, right: FAB_RIGHT, zIndex: 20 }}>
+
+        {/* Mini action circles — animate upward */}
         <AnimatePresence>
           {fabOpen && ACTIONS.map((action, i) => {
             const offset = (ACTIONS.length - i) * MINI_SPACING;
@@ -277,11 +335,11 @@ export default function CorkScreen() {
                 >
                   <View style={[
                     styles.miniFab,
-                    action.id === 'delete' && deleteMode && { backgroundColor: '#FF4444', borderColor: '#FF6666' },
+                    action.id === 'delete' && deleteMode && { backgroundColor: '#FF3B30', borderColor: '#FF3B30' },
                   ]}>
-                    <Text style={{ fontSize: 18 }}>{action.emoji}</Text>
+                    <FabIcon id={action.id} active={action.id === 'delete' && deleteMode} />
                   </View>
-                  <View style={{ backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                  <View style={{ backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
                     <Text style={{ fontSize: 9, color: '#FFF', fontFamily: 'Inter_600SemiBold' }}>{action.label}</Text>
                   </View>
                 </Pressable>
@@ -299,27 +357,26 @@ export default function CorkScreen() {
           }}
           style={[
             styles.fab,
-            { backgroundColor: deleteMode ? '#FF4444' : theme.accent },
+            { backgroundColor: deleteMode ? '#FF3B30' : 'rgba(60,35,12,0.82)' },
           ]}
         >
           <MotiView
             animate={{ rotate: fabOpen ? '45deg' : '0deg' }}
             transition={{ type: 'spring', damping: 20 }}
           >
-            <Text style={{ fontSize: 22, color: '#EEEEF8', lineHeight: 26 }}>
-              {deleteMode ? '✕' : '+'}
-            </Text>
+            <View style={{ width: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}>
+              {deleteMode ? (
+                <Text style={{ fontSize: 16, color: '#FFF' }}>✕</Text>
+              ) : (
+                <>
+                  <View style={{ width: 14, height: 1.5, backgroundColor: 'rgba(255,253,245,0.9)', borderRadius: 1 }} />
+                  <View style={{ width: 1.5, height: 14, backgroundColor: 'rgba(255,253,245,0.9)', borderRadius: 1, position: 'absolute' }} />
+                </>
+              )}
+            </View>
           </MotiView>
         </Pressable>
       </View>
-
-      {/* Backdrop — tap outside to close FAB */}
-      {fabOpen && (
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={() => { setFabOpen(false); }}
-        />
-      )}
 
       {/* Note modal */}
       <Modal visible={noteModalVisible} transparent animationType="slide" onRequestClose={() => setNoteModalVisible(false)}>
