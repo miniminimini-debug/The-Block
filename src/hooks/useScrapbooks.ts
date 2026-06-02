@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@lib/supabase';
 import { useAuthStore } from '@stores/auth.store';
 import { isDemoMode } from '@lib/demo';
-import { uploadPhoto } from '@lib/storage';
+import { uploadScrapbookItem } from '@lib/storage';
 import type { Scrapbook, ScrapbookPage, ScrapbookItem } from '@types/models';
 
 const KEYS = {
@@ -220,12 +220,7 @@ export function useAddScrapbookItem(scrapbookId: string) {
 
       if (imageUri) {
         const itemId = crypto.randomUUID();
-        const result = await uploadPhoto({
-          userId,
-          bucket: 'photos',
-          path: `scrapbooks/${scrapbookId}/${itemId}`,
-          uri: imageUri,
-        });
+        const result = await uploadScrapbookItem(userId, scrapbookId, itemId, imageUri);
         imageUrl = result.originalUrl;
         thumbnailUrl = result.thumbnailUrl;
         storagePath = result.path;

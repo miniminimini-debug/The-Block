@@ -128,3 +128,8 @@ export function uploadDeskDrop(userId: string, dropId: string, localUri: string)
 export function uploadBoothShot(userId: string, sessionId: string, shotNumber: number, localUri: string) {
   return uploadPhoto(`booth/${userId}/${sessionId}/${shotNumber}.jpg`, localUri);
 }
+
+/** Upload a scrapbook item photo. */
+export function uploadScrapbookItem(userId: string, scrapbookId: string, itemId: string, localUri: string) {
+  return uploadPhoto(`scrapbooks/${userId}/${scrapbookId}/${itemId}.jpg`, localUri);
+}
