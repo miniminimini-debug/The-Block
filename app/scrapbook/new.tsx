@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, Pressable, ScrollView,
-  KeyboardAvoidingView, Platform, FlatList,
+  KeyboardAvoidingView, Platform, FlatList, Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,20 +11,18 @@ import { useCreateScrapbook } from '@hooks/useScrapbooks';
 import { useFriends } from '@hooks/useFriendships';
 import type { FriendSummary } from '@types/models';
 
-// ─── Spine colours — 12 visually distinct options ────────────────────────────
+// ─── Spine colours — photo booth palette (10 colours, near-duplicates removed) ─
 const SPINE_COLORS: [string, string, string][] = [
-  ['#C84B4B', '#8C2828', '#FFB0A0'], // red
-  ['#E05A30', '#B83018', '#FF9060'], // red-orange
-  ['#C87B3A', '#8C4A18', '#FFB870'], // orange
-  ['#E0B830', '#A08010', '#FFE060'], // golden
-  ['#4B9E4B', '#2A6A2A', '#90E890'], // green
-  ['#3A8A5A', '#1C5838', '#80D8A8'], // teal-green
-  ['#309898', '#186060', '#60E0E0'], // teal
-  ['#4B7BC8', '#2A5090', '#A0CCFF'], // blue
-  ['#2A4060', '#121C38', '#6090C8'], // dark navy
-  ['#8B5BC8', '#5830A0', '#D0A0FF'], // purple
-  ['#A050C8', '#7028A0', '#E0A0FF'], // violet
-  ['#E8E0D0', '#B8B0A0', '#806850'], // cream
+  ['#FFF4B0', '#C8B840', '#5A4A00'], // lemon
+  ['#C8EEC0', '#70A868', '#1E5A18'], // sage
+  ['#FFD0E4', '#C87898', '#7A1848'], // blush
+  ['#C8785A', '#7A3820', '#FFE0C8'], // terracotta
+  ['#9078B8', '#4A3878', '#EEE0FF'], // lavender
+  ['#C87890', '#7A3850', '#FFE0F0'], // rose
+  ['#C8A060', '#7A5820', '#FFF0C8'], // amber
+  ['#1E2A4A', '#0A1228', '#90B8F0'], // navy
+  ['#2A1A3A', '#100A18', '#C8A0F0'], // violet
+  ['#1A3028', '#081810', '#78C898'], // forest
 ];
 
 const SW = 42;
@@ -113,7 +111,9 @@ export default function NewScrapbookScreen() {
         memberIds: selectedFriendIds,
       });
       router.replace(`/scrapbook/${id}` as any);
-    } catch {}
+    } catch (err: any) {
+      Alert.alert('Could not create scrapbook', err?.message ?? 'Check your connection and try again.');
+    }
   };
 
   const canCreate = title.trim().length > 0;

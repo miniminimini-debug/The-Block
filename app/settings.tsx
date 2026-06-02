@@ -193,6 +193,30 @@ export default function SettingsScreen() {
           <SettingRow emoji="💬" label="give me feedback" onPress={() => {}} index={0} />
           <SettingRow emoji="📋" label="privacy policy" onPress={() => {}} index={1} />
           <SettingRow emoji="📄" label="terms of service" onPress={() => {}} index={2} />
+          <SettingRow
+            emoji="🔌"
+            label="test connection"
+            sub="check if Supabase is reachable"
+            index={3}
+            onPress={async () => {
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'NOT SET';
+                if (!session) {
+                  Alert.alert('Not logged in', `URL: ${url}\n\nNo active session. Please sign out and sign in again.`);
+                  return;
+                }
+                const { error } = await supabase.from('users').select('id').eq('id', session.user.id).single();
+                if (error) {
+                  Alert.alert('DB Error', `URL: ${url}\n\nUser: ${session.user.id}\n\nError: ${error.message} (${error.code})`);
+                } else {
+                  Alert.alert('Connected ✓', `URL: ${url}\n\nLogged in as: ${session.user.id}`);
+                }
+              } catch (e: any) {
+                Alert.alert('Connection failed', e?.message ?? String(e));
+              }
+            }}
+          />
           <View style={[styles.versionRow]}>
             <Text style={styles.versionText}>the block · v0.1.0</Text>
           </View>
