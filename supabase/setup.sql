@@ -408,6 +408,27 @@ do $$ declare r record; begin
   end loop;
 end $$;
 
+-- ─── Security-definer helpers (break recursive policy chains) ─────────────────
+create or replace function public.my_scrapbook_ids()
+returns uuid[] language sql security definer stable as $$
+  select array(select scrapbook_id from public.scrapbook_members where user_id = auth.uid());
+$$;
+
+create or replace function public.my_capsule_ids()
+returns uuid[] language sql security definer stable as $$
+  select array(select capsule_id from public.capsule_members where user_id = auth.uid());
+$$;
+
+create or replace function public.my_board_ids()
+returns uuid[] language sql security definer stable as $$
+  select array(select board_id from public.cork_board_members where user_id = auth.uid());
+$$;
+
+create or replace function public.my_pass_ids()
+returns uuid[] language sql security definer stable as $$
+  select array(select pass_id from public.pass_participants where user_id = auth.uid());
+$$;
+
 -- users
 create policy "users_select"  on public.users for select using (true);
 create policy "users_insert"  on public.users for insert with check (auth.uid() = id);
@@ -444,12 +465,12 @@ create policy "reactions_insert" on public.reactions for insert with check (auth
 create policy "reactions_delete" on public.reactions for delete using (auth.uid() = user_id);
 
 -- capsules
-create policy "capsules_select" on public.capsules for select using (exists (select 1 from public.capsule_members where capsule_id = id and user_id = auth.uid()));
+create policy "capsules_select" on public.capsules for select using (creator_id = auth.uid() or id = any(public.my_capsule_ids()));
 create policy "capsules_insert" on public.capsules for insert with check (creator_id = auth.uid());
 create policy "capsules_update" on public.capsules for update using (creator_id = auth.uid());
 
 -- capsule_members
-create policy "capsule_members_select" on public.capsule_members for select using (exists (select 1 from public.capsule_members cm2 where cm2.capsule_id = capsule_id and cm2.user_id = auth.uid()));
+create policy "capsule_members_select" on public.capsule_members for select using (capsule_id = any(public.my_capsule_ids()));
 create policy "capsule_members_insert" on public.capsule_members for insert with check (exists (select 1 from public.capsules where id = capsule_id and creator_id = auth.uid()) or user_id = auth.uid());
 create policy "capsule_members_update" on public.capsule_members for update using (exists (select 1 from public.capsules where id = capsule_id and creator_id = auth.uid()) or user_id = auth.uid());
 
@@ -464,16 +485,16 @@ create policy "desk_drops_insert" on public.desk_drops for insert with check (se
 create policy "desk_drops_update" on public.desk_drops for update using (recipient_id = auth.uid());
 
 -- camera_passes
-create policy "camera_passes_select" on public.camera_passes for select using (creator_id = auth.uid() or exists (select 1 from public.pass_participants where pass_id = id and user_id = auth.uid()));
+create policy "camera_passes_select" on public.camera_passes for select using (creator_id = auth.uid() or id = any(public.my_pass_ids()));
 create policy "camera_passes_insert" on public.camera_passes for insert with check (creator_id = auth.uid());
 create policy "camera_passes_update" on public.camera_passes for update using (creator_id = auth.uid() or current_holder_id = auth.uid());
 
 -- pass_participants
-create policy "pass_participants_select" on public.pass_participants for select using (exists (select 1 from public.camera_passes where id = pass_id and (creator_id = auth.uid() or exists (select 1 from public.pass_participants pp2 where pp2.pass_id = pass_id and pp2.user_id = auth.uid()))));
+create policy "pass_participants_select" on public.pass_participants for select using (pass_id = any(public.my_pass_ids()) or exists (select 1 from public.camera_passes where id = pass_id and creator_id = auth.uid()));
 create policy "pass_participants_insert" on public.pass_participants for insert with check (exists (select 1 from public.camera_passes where id = pass_id and creator_id = auth.uid()));
 
 -- pass_shots
-create policy "pass_shots_select" on public.pass_shots for select using (exists (select 1 from public.pass_participants where pass_id = pass_shots.pass_id and user_id = auth.uid()));
+create policy "pass_shots_select" on public.pass_shots for select using (pass_id = any(public.my_pass_ids()) or exists (select 1 from public.camera_passes where id = pass_id and creator_id = auth.uid()));
 create policy "pass_shots_insert" on public.pass_shots for insert with check (photographer_id = auth.uid() and exists (select 1 from public.camera_passes where id = pass_shots.pass_id and current_holder_id = auth.uid()));
 
 -- cork_boards
@@ -483,31 +504,31 @@ create policy "cork_boards_update" on public.cork_boards for update using (creat
 create policy "cork_boards_delete" on public.cork_boards for delete using (creator_id = auth.uid());
 
 -- cork_board_members
-create policy "cork_board_members_select" on public.cork_board_members for select using (board_id in (select board_id from public.cork_board_members where user_id = auth.uid()));
+create policy "cork_board_members_select" on public.cork_board_members for select using (board_id = any(public.my_board_ids()));
 create policy "cork_board_members_insert" on public.cork_board_members for insert with check (board_id in (select id from public.cork_boards where creator_id = auth.uid()) or user_id = auth.uid());
 
 -- cork_board_items
-create policy "cork_board_items_select" on public.cork_board_items for select using (board_id in (select board_id from public.cork_board_members where user_id = auth.uid()));
-create policy "cork_board_items_insert" on public.cork_board_items for insert with check (creator_id = auth.uid() and board_id in (select board_id from public.cork_board_members where user_id = auth.uid()));
-create policy "cork_board_items_update" on public.cork_board_items for update using (board_id in (select board_id from public.cork_board_members where user_id = auth.uid()));
+create policy "cork_board_items_select" on public.cork_board_items for select using (board_id = any(public.my_board_ids()));
+create policy "cork_board_items_insert" on public.cork_board_items for insert with check (creator_id = auth.uid() and board_id = any(public.my_board_ids()));
+create policy "cork_board_items_update" on public.cork_board_items for update using (board_id = any(public.my_board_ids()));
 create policy "cork_board_items_delete" on public.cork_board_items for delete using (creator_id = auth.uid());
 
 -- scrapbooks
-create policy "scrapbooks_select" on public.scrapbooks for select using (id in (select scrapbook_id from public.scrapbook_members where user_id = auth.uid()));
+create policy "scrapbooks_select" on public.scrapbooks for select using (creator_id = auth.uid() or id = any(public.my_scrapbook_ids()));
 create policy "scrapbooks_insert" on public.scrapbooks for insert with check (creator_id = auth.uid());
 create policy "scrapbooks_update" on public.scrapbooks for update using (creator_id = auth.uid());
 
 -- scrapbook_members
-create policy "scrapbook_members_select" on public.scrapbook_members for select using (scrapbook_id in (select scrapbook_id from public.scrapbook_members where user_id = auth.uid()));
+create policy "scrapbook_members_select" on public.scrapbook_members for select using (scrapbook_id = any(public.my_scrapbook_ids()));
 create policy "scrapbook_members_insert" on public.scrapbook_members for insert with check (scrapbook_id in (select id from public.scrapbooks where creator_id = auth.uid()) or user_id = auth.uid());
 
 -- scrapbook_pages
-create policy "scrapbook_pages_select" on public.scrapbook_pages for select using (scrapbook_id in (select scrapbook_id from public.scrapbook_members where user_id = auth.uid()));
-create policy "scrapbook_pages_insert" on public.scrapbook_pages for insert with check (scrapbook_id in (select scrapbook_id from public.scrapbook_members where user_id = auth.uid()));
+create policy "scrapbook_pages_select" on public.scrapbook_pages for select using (scrapbook_id = any(public.my_scrapbook_ids()));
+create policy "scrapbook_pages_insert" on public.scrapbook_pages for insert with check (scrapbook_id = any(public.my_scrapbook_ids()));
 
 -- scrapbook_items
-create policy "scrapbook_items_select" on public.scrapbook_items for select using (scrapbook_id in (select scrapbook_id from public.scrapbook_members where user_id = auth.uid()));
-create policy "scrapbook_items_insert" on public.scrapbook_items for insert with check (creator_id = auth.uid() and scrapbook_id in (select scrapbook_id from public.scrapbook_members where user_id = auth.uid()));
+create policy "scrapbook_items_select" on public.scrapbook_items for select using (scrapbook_id = any(public.my_scrapbook_ids()));
+create policy "scrapbook_items_insert" on public.scrapbook_items for insert with check (creator_id = auth.uid() and scrapbook_id = any(public.my_scrapbook_ids()));
 create policy "scrapbook_items_delete" on public.scrapbook_items for delete using (creator_id = auth.uid());
 
 -- push_notifications (service role only)
