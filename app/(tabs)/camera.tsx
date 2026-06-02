@@ -63,6 +63,7 @@ export default function CameraScreen() {
   const addBoothCapture = useCameraStore((s) => s.addBoothCapture);
   const setBoothCountdown = useCameraStore((s) => s.setBoothCountdown);
   const resetBooth     = useCameraStore((s) => s.resetBooth);
+  const setActivePrompt = useCameraStore((s) => s.setActivePrompt);
 
   const cameraRef    = useRef<CameraView>(null);
   const flashOpacity = useSharedValue(0);
@@ -95,11 +96,12 @@ export default function CameraScreen() {
       if (isFlashOn) doFlash();
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
       if (photo?.uri) {
+        setActivePrompt(currentPrompt);
         setCaptureUri(photo.uri);
         setStage('composer');
       }
     } catch { /* stay in viewfinder */ }
-  }, [isBoothRunning, isFlashOn, setCaptureUri, setStage]);
+  }, [isBoothRunning, isFlashOn, currentPrompt, setActivePrompt, setCaptureUri, setStage]);
 
   // ── Photo Booth capture loop ───────────────────────────────
   const startBooth = useCallback(async () => {

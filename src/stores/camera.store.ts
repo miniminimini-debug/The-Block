@@ -25,6 +25,7 @@ interface CameraState {
   isFlashOn: boolean;
   isFrontCamera: boolean;
   uploadProgress: number;
+  activePrompt: string | null;
 
   // Camera mode
   cameraMode: CameraMode;
@@ -47,6 +48,7 @@ interface CameraState {
   setCameraMode: (mode: CameraMode) => void;
   addBoothCapture: (uri: string) => void;
   setBoothCountdown: (n: number) => void;
+  setActivePrompt: (prompt: string | null) => void;
   reset: () => void;
   resetBooth: () => void;
 }
@@ -61,6 +63,7 @@ const defaults = {
   isFlashOn: false,
   isFrontCamera: false,
   uploadProgress: 0,
+  activePrompt: null as string | null,
   cameraMode: 'oneshot' as CameraMode,
   boothCaptures: [] as string[],
   boothShotIndex: 0,
@@ -104,6 +107,7 @@ export const useCameraStore = create<CameraState>()(
       }),
 
     setBoothCountdown: (n) => set((s) => { s.boothCountdown = n; }),
+    setActivePrompt: (prompt) => set((s) => { s.activePrompt = prompt; }),
 
     reset: () => set((s) => Object.assign(s, defaults)),
     resetBooth: () =>

@@ -8,6 +8,7 @@ import { useCorkBoardByCreatorId } from '@hooks/useCorkBoards';
 import { PinnedItem } from '@/components/board/PinnedItem';
 import { CorkBackground } from '@/components/board/CorkBackground';
 import { useTheme } from '@hooks/useTheme';
+import { useCameraStore } from '@stores/camera.store';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -16,6 +17,8 @@ export default function FriendBoardScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { board, isLoading } = useCorkBoardByCreatorId(friendId ?? '');
+  const setRecipients = useCameraStore((s) => s.setRecipients);
+  const setStage = useCameraStore((s) => s.setStage);
   const [canvasH, setCanvasH] = useState(SCREEN_H);
 
   const items = board?.items ?? [];
@@ -81,7 +84,14 @@ export default function FriendBoardScreen() {
         {/* Floating action circles */}
         <View style={{ position: 'absolute', bottom: 24, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 20 }}>
           {[
-            { emoji: '📮', label: 'leave a pic',   onPress: () => router.push(`/drop/send?recipientId=${friendId}` as any) },
+            {
+              emoji: '📷', label: 'leave a pic',
+              onPress: () => {
+                setRecipients([friendId ?? '']);
+                setStage('viewfinder');
+                router.push('/(tabs)/camera');
+              },
+            },
             { emoji: '🎞️', label: 'shared albums', onPress: () => router.push(`/albums/${friendId}` as any) },
           ].map((action) => (
             <Pressable

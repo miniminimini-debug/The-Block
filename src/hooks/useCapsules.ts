@@ -240,6 +240,27 @@ export function useSubmitToCapsule(capsuleId: string) {
   });
 }
 
+// ─── useSealCapsule ───────────────────────────────────────────────────────────
+
+export function useSealCapsule() {
+  const qc = useQueryClient();
+  const userId = useAuthStore((s) => s.session?.user.id);
+
+  return useMutation({
+    mutationFn: async ({ capsuleId, unlockAt }: { capsuleId: string; unlockAt: string }) => {
+      const { error } = await supabase
+        .from('capsules')
+        .update({ unlock_at: unlockAt })
+        .eq('id', capsuleId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: KEYS.capsule(vars.capsuleId) });
+      if (userId) qc.invalidateQueries({ queryKey: KEYS.myCapsules(userId) });
+    },
+  });
+}
+
 // ─── useOpenCapsule ───────────────────────────────────────────────────────────
 
 export function useOpenCapsule() {

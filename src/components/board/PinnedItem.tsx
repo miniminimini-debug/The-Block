@@ -1,14 +1,18 @@
 import { useRef, useState } from 'react';
-import { View, Text, PanResponder, StyleSheet } from 'react-native';
+import { View, Text, Pressable, PanResponder, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
+import { MotiView } from 'moti';
 import { ALL_STICKERS } from '@lib/stickers';
 import type { CorkBoardItem } from '@types/models';
 
 interface PinnedItemProps {
   item: CorkBoardItem;
   canEdit: boolean;
-  bounds: { maxX: number; maxY: number };
+  bounds?: { maxX: number; maxY: number };
+  deleteMode?: boolean;
+  onDeletePress?: () => void;
   onDragEnd: (itemId: string, x: number, y: number) => void;
+  onLongPress?: (item: CorkBoardItem) => void;
 }
 
 const NOTE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -22,16 +26,17 @@ const NOTE_COLORS: Record<string, { bg: string; text: string }> = {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
-export function PinnedItem({ item, canEdit, bounds, onDragEnd }: PinnedItemProps) {
+export function PinnedItem({ item, canEdit, bounds = { maxX: 999, maxY: 999 }, deleteMode, onDeletePress, onDragEnd, onLongPress }: PinnedItemProps) {
   const [pos, setPos] = useState({ x: item.posX, y: item.posY });
   const [isDragging, setIsDragging] = useState(false);
 
-  // Refs keep the PanResponder (created once) reading fresh values
   const posRef = useRef(pos);
   posRef.current = pos;
   const startPosRef = useRef({ x: 0, y: 0 });
   const canEditRef = useRef(canEdit);
   canEditRef.current = canEdit;
+  const deleteModeRef = useRef(deleteMode);
+  deleteModeRef.current = deleteMode;
   const boundsRef = useRef(bounds);
   boundsRef.current = bounds;
   const onDragEndRef = useRef(onDragEnd);
@@ -41,7 +46,7 @@ export function PinnedItem({ item, canEdit, bounds, onDragEnd }: PinnedItemProps
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gs) =>
-        canEditRef.current && (Math.abs(gs.dx) > 3 || Math.abs(gs.dy) > 3),
+        canEditRef.current && !deleteModeRef.current && (Math.abs(gs.dx) > 3 || Math.abs(gs.dy) > 3),
       onPanResponderGrant: () => {
         setIsDragging(true);
         startPosRef.current = { ...posRef.current };
@@ -70,14 +75,21 @@ export function PinnedItem({ item, canEdit, bounds, onDragEnd }: PinnedItemProps
   const noteStyle = NOTE_COLORS[item.color] ?? NOTE_COLORS['#F5E6A3'];
 
   return (
-    <View
+    <MotiView
       {...panResponder.panHandlers}
+      animate={deleteMode
+        ? { rotate: [`${item.rotation - 2}deg`, `${item.rotation + 2}deg`] }
+        : { rotate: `${item.rotation}deg` }
+      }
+      transition={deleteMode
+        ? { type: 'timing', duration: 180, loop: true }
+        : { type: 'spring', damping: 20, stiffness: 150 }
+      }
       style={[
         styles.item,
         {
           left: pos.x,
           top: pos.y,
-          transform: [{ rotate: `${item.rotation}deg` }],
           zIndex: isDragging ? 999 : item.zIndex,
           opacity: isDragging ? 0.85 : 1,
           elevation: isDragging ? 8 : 2,
@@ -109,13 +121,32 @@ export function PinnedItem({ item, canEdit, bounds, onDragEnd }: PinnedItemProps
           <Text style={{ fontSize: 44 }}>{sticker.emoji}</Text>
         );
       })()}
-    </View>
+
+      {/* Delete X badge */}
+      {deleteMode && onDeletePress && (
+        <Pressable
+          onPress={onDeletePress}
+          style={styles.deleteBadge}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Text style={{ fontSize: 11, color: '#FFF', fontWeight: '700', lineHeight: 14 }}>✕</Text>
+        </Pressable>
+      )}
+    </MotiView>
   );
 }
 
 const styles = StyleSheet.create({
   item: {
     position: 'absolute',
+  },
+  deleteBadge: {
+    position: 'absolute', top: -8, right: -8,
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: '#FF3B30',
+    borderWidth: 2, borderColor: '#FFF',
+    alignItems: 'center', justifyContent: 'center',
+    zIndex: 10,
   },
   photoFrame: {
     width: 120,

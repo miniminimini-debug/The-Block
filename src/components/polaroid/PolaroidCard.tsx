@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import { View, Text, Pressable, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { MotiView } from 'moti';
@@ -11,6 +11,7 @@ interface PolaroidCardProps {
   imageUri: string;
   status?: 'developing' | 'developed';
   note?: string | null;
+  promptSticker?: string | null;
   senderName?: string | null;
   capturedAt?: Date | string;
   size?: Size;
@@ -23,14 +24,15 @@ interface PolaroidCardProps {
 const sizeMap: Record<Size, { width: number; photoHeight: number; stripHeight: number; noteSize: number }> = {
   sm:   { width: 140, photoHeight: 132, stripHeight: 40, noteSize: 10 },
   md:   { width: 190, photoHeight: 178, stripHeight: 50, noteSize: 11 },
-  lg:   { width: 260, photoHeight: 248, stripHeight: 62, noteSize: 12 },
-  full: { width: 320, photoHeight: 308, stripHeight: 70, noteSize: 13 },
+  lg:   { width: 260, photoHeight: 248, stripHeight: 68, noteSize: 13 },
+  full: { width: 320, photoHeight: 308, stripHeight: 76, noteSize: 14 },
 };
 
 export function PolaroidCard({
   imageUri,
   status = 'developed',
   note,
+  promptSticker,
   senderName,
   capturedAt,
   size = 'md',
@@ -42,18 +44,19 @@ export function PolaroidCard({
   const { width, photoHeight, stripHeight, noteSize } = sizeMap[size];
   const inset = size === 'sm' ? 4 : 6;
 
-  // Stable tilt: seeded from imageUri so it never changes on re-render
   const stableTilt = useMemo(() => {
     if (tilt !== undefined) return tilt;
     const seed = imageUri.charCodeAt(imageUri.length - 4) || 0;
     return ((seed % 7) - 3) * 0.8;
-  }, [imageUri]);
+  }, [imageUri, tilt]);
 
   const dateStr = capturedAt
     ? format(typeof capturedAt === 'string' ? new Date(capturedAt) : capturedAt, 'MMM d')
     : '';
 
   const isDeveloping = status === 'developing';
+  // Truncate note to 20 characters for the strip
+  const displayNote = note ? note.slice(0, 20) : null;
 
   return (
     <MotiView
@@ -90,19 +93,10 @@ export function PolaroidCard({
             transition={isDeveloping ? 0 : 800}
           />
 
-          {/* Sepia overlay during development */}
           {isDeveloping && (
-            <View
-              style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: '#C9A96E',
-                opacity: 0.45,
-              }}
-            />
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#C9A96E', opacity: 0.45 }} />
           )}
 
-          {/* Developing text */}
           {isDeveloping && (
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
               <MotiView
@@ -117,19 +111,19 @@ export function PolaroidCard({
             </View>
           )}
 
-          {/* Handwritten note overlay on photo */}
-          {note && !isDeveloping && (
+          {/* Prompt sticker — small angled label on the photo */}
+          {promptSticker && !isDeveloping && (
             <View style={{
-              position: 'absolute',
-              bottom: 0, left: 0, right: 0,
-              backgroundColor: 'rgba(42,31,15,0.55)',
-              paddingHorizontal: 8, paddingVertical: 6,
+              position: 'absolute', top: 8, right: -4,
+              backgroundColor: '#FFFDF5',
+              paddingHorizontal: 7, paddingVertical: 4,
+              borderRadius: 3,
+              transform: [{ rotate: '3deg' }],
+              shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
+              elevation: 3, maxWidth: width * 0.75,
             }}>
-              <Text
-                style={{ fontSize: noteSize, color: '#F5F0E8', fontFamily: 'Inter_400Regular', lineHeight: noteSize * 1.5 }}
-                numberOfLines={2}
-              >
-                {note}
+              <Text style={{ fontSize: noteSize - 1, color: '#2A1F0F', fontFamily: 'Caveat_400Regular', lineHeight: noteSize + 2 }} numberOfLines={2}>
+                {promptSticker}
               </Text>
             </View>
           )}
@@ -137,18 +131,28 @@ export function PolaroidCard({
           <FilmGrainOverlay opacity={isDeveloping ? 0.18 : 0.07} />
         </View>
 
-        {/* Strip */}
-        <View style={{ height: stripHeight, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-          {senderName && (
-            <Text style={{ fontSize: noteSize, color: '#2A1F0F', fontFamily: 'Inter_500Medium' }} numberOfLines={1}>
-              {senderName}
-            </Text>
-          )}
-          {dateStr ? (
-            <Text style={{ fontSize: noteSize - 1, color: '#6B5A48', fontFamily: 'Inter_400Regular' }}>
-              {dateStr}
+        {/* White strip — note + sender + date */}
+        <View style={{ height: stripHeight, paddingHorizontal: 6, paddingTop: 6, paddingBottom: 4, justifyContent: 'center', gap: 2 }}>
+          {displayNote && !isDeveloping ? (
+            <Text
+              style={{ fontSize: noteSize + 1, color: '#2A1F0F', fontFamily: 'Caveat_400Regular', lineHeight: (noteSize + 1) * 1.3 }}
+              numberOfLines={1}
+            >
+              {displayNote}
             </Text>
           ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            {senderName ? (
+              <Text style={{ fontSize: noteSize - 1, color: '#6B5A48', fontFamily: 'Inter_400Regular' }} numberOfLines={1}>
+                {senderName}
+              </Text>
+            ) : <View />}
+            {dateStr ? (
+              <Text style={{ fontSize: noteSize - 1, color: '#9A8A78', fontFamily: 'Inter_400Regular' }}>
+                {dateStr}
+              </Text>
+            ) : null}
+          </View>
         </View>
       </Pressable>
     </MotiView>

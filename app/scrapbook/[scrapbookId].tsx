@@ -330,13 +330,40 @@ export default function ScrapbookScreen() {
 
         {/* ── Page canvas ─────────────────────────────────────────────────── */}
         {pages.length === 0 ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-            <Text style={{ fontSize: 52 }}>📒</Text>
-            <Text style={{ fontSize: 15, color: '#7A7A9A', fontFamily: 'Inter_500Medium' }}>empty scrapbook</Text>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 40 }}>
+            {isMyPics && (
+              <>
+                <Text style={{ fontSize: 15, color: '#EEEEF8', fontFamily: 'Inter_600SemiBold', textAlign: 'center' }}>your sent photos</Text>
+                <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 20 }}>
+                  every polaroid you send to friends collects here automatically
+                </Text>
+              </>
+            )}
+            {isFriends && (
+              <>
+                <Text style={{ fontSize: 15, color: '#EEEEF8', fontFamily: 'Inter_600SemiBold', textAlign: 'center' }}>photos from friends</Text>
+                <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 20 }}>
+                  polaroids your friends send you will appear here once developed
+                </Text>
+              </>
+            )}
+            {isPhotoBooth && (
+              <>
+                <Text style={{ fontSize: 15, color: '#EEEEF8', fontFamily: 'Inter_600SemiBold', textAlign: 'center' }}>your photo booth strips</Text>
+                <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 20 }}>
+                  every photo booth session you take gets saved here
+                </Text>
+              </>
+            )}
+            {!isSpecial && (
+              <Text style={{ fontSize: 13, color: '#5A5A7A', fontFamily: 'Inter_400Regular', textAlign: 'center' }}>
+                this scrapbook is empty
+              </Text>
+            )}
             {canEdit && (
               <Pressable
                 onPress={handleAddPage}
-                style={{ paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#2A2040', borderRadius: 14, borderWidth: 1, borderColor: '#6B52E0' }}
+                style={{ marginTop: 4, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#2A2040', borderRadius: 14, borderWidth: 1, borderColor: '#6B52E0' }}
               >
                 <Text style={{ color: '#B8AEFF', fontFamily: 'Inter_600SemiBold' }}>add first page</Text>
               </Pressable>

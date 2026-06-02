@@ -269,30 +269,29 @@ const strip = StyleSheet.create({
   },
 });
 
-// ── Padlock icon ──────────────────────────────────────────────────────────────
-function Padlock({ color, dimColor }: { color: string; dimColor: string }) {
+// ── Minimalist capsule icon ───────────────────────────────────────────────────
+function CapsuleIcon({ color, dimColor }: { color: string; dimColor: string }) {
   return (
-    <View style={{ alignItems: 'center' }}>
-      {/* shackle arch */}
+    <View style={{ alignItems: 'center', justifyContent: 'center', width: 44, height: 72 }}>
+      {/* Capsule body */}
       <View style={{
-        width: 22, height: 13,
-        borderTopLeftRadius: 11, borderTopRightRadius: 11,
-        borderWidth: 3, borderColor: color,
-        borderBottomWidth: 0,
-        marginBottom: -1,
-      }} />
-      {/* body */}
-      <View style={{
-        width: 32, height: 22,
-        backgroundColor: dimColor,
-        borderRadius: 6,
+        width: 36, height: 64,
+        borderRadius: 18,
         borderWidth: 1.5, borderColor: color,
-        alignItems: 'center', justifyContent: 'center',
-        gap: 2,
+        backgroundColor: dimColor,
+        overflow: 'hidden',
+        alignItems: 'center',
       }}>
-        {/* keyhole */}
-        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
-        <View style={{ width: 3, height: 5, borderRadius: 1.5, backgroundColor: color, marginTop: -2 }} />
+        {/* Seal band */}
+        <View style={{ position: 'absolute', top: '45%', left: 0, right: 0, height: 1.5, backgroundColor: color, opacity: 0.6 }} />
+        {/* Top half dots */}
+        <View style={{ position: 'absolute', top: '18%', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 }}>
+          {[0,1,2].map((n) => <View key={n} style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, opacity: 0.45 }} />)}
+        </View>
+        {/* Bottom half dots */}
+        <View style={{ position: 'absolute', top: '64%', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 }}>
+          {[0,1,2].map((n) => <View key={n} style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, opacity: 0.3 }} />)}
+        </View>
       </View>
     </View>
   );
@@ -412,38 +411,62 @@ export default function HomeScreen() {
               {drops.map((drop, i) => (
                 <MotiView
                   key={drop.id}
-                  from={{ opacity: 0, translateX: -8 }}
-                  animate={{ opacity: 1, translateX: 0 }}
-                  transition={{ delay: i * 60, type: 'spring', damping: 22, stiffness: 200 }}
-                  style={{ marginBottom: 8 }}
+                  from={{ opacity: 0, translateY: 6 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  transition={{ delay: i * 70, type: 'spring', damping: 22, stiffness: 200 }}
+                  style={{ marginBottom: 10 }}
                 >
                   <Pressable
                     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push(`/drop/${drop.id}`); }}
-                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.surface, borderRadius: 16, borderWidth: 1.5, borderColor: theme.accent, padding: 12, gap: 12 }}
                   >
-                    <View style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', backgroundColor: theme.surfaceElevated }}>
-                      {drop.thumbnailUrl ? (
-                        <Image source={{ uri: drop.thumbnailUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" blurRadius={12} />
-                      ) : (
-                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 22 }}>📷</Text></View>
-                      )}
-                      <MotiView
-                        from={{ opacity: 0 }} animate={{ opacity: [0, 0.5, 0] }}
-                        transition={{ type: 'timing', duration: 1800, loop: true }}
-                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: theme.accent }}
-                      />
-                    </View>
-                    <View style={{ flex: 1, gap: 3 }}>
-                      <Text style={{ fontSize: 14, color: theme.text, fontFamily: 'Inter_600SemiBold' }}>
-                        {drop.sender?.display_name ?? drop.sender?.username ?? '...'}
-                        <Text style={{ fontFamily: 'Inter_400Regular', color: theme.textSub }}> left something</Text>
-                      </Text>
-                      {drop.note && (
-                        <Text style={{ fontSize: 12, color: theme.textDim, fontFamily: 'Inter_400Regular', fontStyle: 'italic' }} numberOfLines={1}>"{drop.note}"</Text>
-                      )}
-                    </View>
-                    <View style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12, backgroundColor: theme.accentDim, borderWidth: 1, borderColor: theme.accent }}>
-                      <Text style={{ fontSize: 12, color: theme.accentLight, fontFamily: 'Inter_600SemiBold' }}>look</Text>
+                    {/* Envelope card */}
+                    <View style={{ backgroundColor: '#F5F0E6', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4 }}>
+                      {/* Envelope flap (V shape via border trick) */}
+                      <View style={{ height: 28, backgroundColor: '#EDE8DC', alignItems: 'center', justifyContent: 'flex-start', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)' }}>
+                        {/* V fold lines */}
+                        <View style={{ width: '100%', height: 28, overflow: 'hidden' }}>
+                          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28 }}>
+                            {/* Left flap half */}
+                            <View style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0, borderLeftWidth: 0, borderRightWidth: 90, borderBottomWidth: 28, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: '#EDE8DC' }} />
+                            {/* Right flap half */}
+                            <View style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderRightWidth: 0, borderLeftWidth: 90, borderBottomWidth: 28, borderRightColor: 'transparent', borderLeftColor: 'transparent', borderBottomColor: '#EDE8DC' }} />
+                            {/* Divider line down middle */}
+                            <View style={{ position: 'absolute', top: 0, left: '50%', width: 1, height: 28, backgroundColor: 'rgba(0,0,0,0.06)' }} />
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Envelope body */}
+                      <View style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        {/* Sender avatar */}
+                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.accentDim, borderWidth: 1.5, borderColor: theme.accent, alignItems: 'center', justifyContent: 'center' }}>
+                          <Text style={{ fontSize: 20 }}>{drop.sender?.avatar_emoji ?? '🌙'}</Text>
+                        </View>
+
+                        <View style={{ flex: 1, gap: 2 }}>
+                          <Text style={{ fontSize: 14, color: '#1A1208', fontFamily: 'Inter_600SemiBold' }}>
+                            {drop.sender?.display_name ?? drop.sender?.username ?? '...'}
+                          </Text>
+                          <Text style={{ fontSize: 12, color: '#6B5A48', fontFamily: 'Inter_400Regular' }}>
+                            {drop.note ? `"${drop.note}"` : 'sent you something'}
+                          </Text>
+                        </View>
+
+                        {/* Pulsing seal dot */}
+                        <MotiView
+                          from={{ scale: 0.8, opacity: 0.6 }}
+                          animate={{ scale: [0.8, 1.1, 0.8], opacity: [0.6, 1, 0.6] }}
+                          transition={{ type: 'timing', duration: 1600, loop: true }}
+                          style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: theme.accent }}
+                        />
+                      </View>
+
+                      {/* Bottom strip */}
+                      <View style={{ paddingHorizontal: 14, paddingBottom: 12, alignItems: 'flex-end' }}>
+                        <View style={{ backgroundColor: theme.accentDim, borderWidth: 1, borderColor: theme.accent, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 6 }}>
+                          <Text style={{ fontSize: 12, color: theme.accentLight, fontFamily: 'Inter_600SemiBold' }}>open letter</Text>
+                        </View>
+                      </View>
                     </View>
                   </Pressable>
                 </MotiView>
@@ -569,13 +592,13 @@ export default function HomeScreen() {
               </Text>
             </Pressable>
 
-            {/* Time capsule — padlock */}
+            {/* Time capsule — minimalist capsule */}
             <Pressable
               onPress={() => { Haptics.selectionAsync(); router.push('/capsule/new'); }}
               style={{ flex: 1, backgroundColor: theme.surface, borderRadius: 18, borderWidth: 1, borderColor: theme.border, paddingVertical: 18, paddingHorizontal: 14, alignItems: 'center', gap: 10 }}
             >
               <View style={{ height: 80, justifyContent: 'center' }}>
-                <Padlock color={theme.accent} dimColor={theme.accentDim} />
+                <CapsuleIcon color={theme.accent} dimColor={theme.accentDim} />
               </View>
               <Text style={{ fontSize: 12, color: theme.textSub, fontFamily: 'Inter_600SemiBold', textAlign: 'center' }}>
                 time capsule

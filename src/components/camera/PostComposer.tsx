@@ -1,10 +1,9 @@
 import { useState, useRef } from 'react';
 import {
   View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView,
-  Platform, ActivityIndicator,
+  Platform, ActivityIndicator, Alert,
 } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
-import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { useCameraStore, type DevelopmentDelay } from '@stores/camera.store';
 import { useCreatePost } from '@hooks/usePosts';
@@ -20,16 +19,15 @@ const DELAYS: { value: DevelopmentDelay; label: string; sub: string }[] = [
 ];
 
 export function PostComposer({ isOneShot = false }: { isOneShot?: boolean }) {
-  const captureUri = useCameraStore((s) => s.captureUri);
-  const note = useCameraStore((s) => s.note);
+  const captureUri       = useCameraStore((s) => s.captureUri);
+  const note             = useCameraStore((s) => s.note);
+  const activePrompt     = useCameraStore((s) => s.activePrompt);
   const selectedRecipientIds = useCameraStore((s) => s.selectedRecipientIds);
   const developmentDelay = useCameraStore((s) => s.developmentDelay);
-  const stage = useCameraStore((s) => s.stage);
-  const setNote = useCameraStore((s) => s.setNote);
-  const toggleRecipient = useCameraStore((s) => s.toggleRecipient);
-  const setDelay = useCameraStore((s) => s.setDelay);
-  const setStage = useCameraStore((s) => s.setStage);
-  const reset = useCameraStore((s) => s.reset);
+  const setNote          = useCameraStore((s) => s.setNote);
+  const toggleRecipient  = useCameraStore((s) => s.toggleRecipient);
+  const setDelay         = useCameraStore((s) => s.setDelay);
+  const reset            = useCameraStore((s) => s.reset);
 
   const { friends, isLoading: friendsLoading } = useFriends();
   const { mutateAsync: createPost, isPending } = useCreatePost();
@@ -45,13 +43,17 @@ export function PostComposer({ isOneShot = false }: { isOneShot?: boolean }) {
   const handleSend = async () => {
     if (!captureUri || selectedRecipientIds.length === 0) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await createPost({
-      imageUri: captureUri,
-      note: note || undefined,
-      mood: null,
-      recipientIds: selectedRecipientIds,
-      developmentDelay,
-    });
+    try {
+      await createPost({
+        imageUri: captureUri,
+        note: note || undefined,
+        mood: null,
+        recipientIds: selectedRecipientIds,
+        developmentDelay,
+      });
+    } catch (err: any) {
+      Alert.alert('Could not send', err?.message ?? 'Something went wrong. Try again.');
+    }
   };
 
   if (!captureUri) return null;
@@ -70,7 +72,6 @@ export function PostComposer({ isOneShot = false }: { isOneShot?: boolean }) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 120 }}
         >
-          {/* Back — hidden in one-shot mode (no take-backs) */}
           {!isOneShot && (
             <Pressable onPress={handleDiscard} style={{ marginBottom: 24 }}>
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 15, color: '#A0A0C0' }}>
@@ -80,38 +81,43 @@ export function PostComposer({ isOneShot = false }: { isOneShot?: boolean }) {
           )}
           {isOneShot && <View style={{ marginBottom: 24, height: 20 }} />}
 
-          {/* Polaroid preview — centered */}
+          {/* Polaroid preview */}
           <View style={{ alignItems: 'center', marginBottom: 28 }}>
             <PolaroidCard
               imageUri={captureUri}
               status="developed"
               note={note || undefined}
+              promptSticker={activePrompt ?? undefined}
               size="lg"
               tilt={0}
             />
           </View>
 
-          {/* Note input */}
+          {/* Note input — max 20 chars, lives on the white strip */}
           <View style={{ marginBottom: 24 }}>
-            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: '#5A5A7A', marginBottom: 8, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-              add a note
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: '#5A5A7A', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                handwritten note
+              </Text>
+              <Text style={{ fontSize: 11, color: note.length >= 18 ? '#FF6B6B' : '#3D3D5E', fontFamily: 'Inter_400Regular' }}>
+                {note.length}/20
+              </Text>
+            </View>
             <View style={{
               borderRadius: 14, borderWidth: 1.5, borderColor: '#2E2E48',
-              backgroundColor: '#12121C', paddingHorizontal: 14, paddingVertical: 14,
+              backgroundColor: '#F5F0E8', paddingHorizontal: 14, paddingVertical: 12,
             }}>
               <TextInput
                 ref={noteRef}
                 value={note}
-                onChangeText={setNote}
+                onChangeText={(v) => setNote(v.slice(0, 20))}
                 placeholder="write something..."
-                placeholderTextColor="#3D3D5E"
-                multiline
-                maxLength={120}
+                placeholderTextColor="#9A8A78"
+                maxLength={20}
                 style={{
-                  fontSize: 15, color: '#EEEEF8',
-                  fontFamily: 'Inter_400Regular',
-                  lineHeight: 22, padding: 0, minHeight: 44,
+                  fontSize: 18, color: '#2A1F0F',
+                  fontFamily: 'Caveat_400Regular',
+                  padding: 0,
                 }}
               />
             </View>
@@ -212,6 +218,7 @@ export function PostComposer({ isOneShot = false }: { isOneShot?: boolean }) {
               style={{
                 borderRadius: 18, paddingVertical: 18, alignItems: 'center',
                 backgroundColor: canSend ? '#6B52E0' : '#2E2E48',
+                opacity: canSend ? 1 : 0.6,
               }}
             >
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 17, color: '#EEEEF8' }}>
@@ -220,8 +227,8 @@ export function PostComposer({ isOneShot = false }: { isOneShot?: boolean }) {
             </Pressable>
           )}
           {selectedRecipientIds.length === 0 && (
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#3D3D5E', textAlign: 'center', marginTop: 8 }}>
-              select at least one person to send to
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#5A5A7A', textAlign: 'center', marginTop: 8 }}>
+              select someone to send to
             </Text>
           )}
         </View>
