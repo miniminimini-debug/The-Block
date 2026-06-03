@@ -63,7 +63,8 @@ create policy "capsules_insert" on public.capsules for insert with check (creato
 create policy "capsules_update" on public.capsules for update using (creator_id = auth.uid());
 
 create policy "capsule_members_select" on public.capsule_members for select using (
-  capsule_id = any(public.my_capsule_ids())
+  user_id = auth.uid()
+  or capsule_id = any(public.my_capsule_ids())
 );
 create policy "capsule_members_insert" on public.capsule_members for insert with check (
   exists (select 1 from public.capsules where id = capsule_id and creator_id = auth.uid())
@@ -124,7 +125,8 @@ create policy "scrapbooks_insert" on public.scrapbooks for insert with check (cr
 create policy "scrapbooks_update" on public.scrapbooks for update using (creator_id = auth.uid());
 
 create policy "scrapbook_members_select" on public.scrapbook_members for select using (
-  scrapbook_id = any(public.my_scrapbook_ids())
+  user_id = auth.uid()
+  or scrapbook_id = any(public.my_scrapbook_ids())
 );
 create policy "scrapbook_members_insert" on public.scrapbook_members for insert with check (
   scrapbook_id in (select id from public.scrapbooks where creator_id = auth.uid())
@@ -157,7 +159,8 @@ create policy "cork_boards_update" on public.cork_boards for update using (creat
 create policy "cork_boards_delete" on public.cork_boards for delete using (creator_id = auth.uid());
 
 create policy "cork_board_members_select" on public.cork_board_members for select using (
-  board_id = any(public.my_board_ids())
+  user_id = auth.uid()
+  or board_id = any(public.my_board_ids())
 );
 create policy "cork_board_members_insert" on public.cork_board_members for insert with check (
   board_id in (select id from public.cork_boards where creator_id = auth.uid())

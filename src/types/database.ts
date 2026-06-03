@@ -26,15 +26,10 @@ export type RoomType =
 
 export type FriendshipStatus = 'pending' | 'accepted' | 'blocked';
 
-export type JourneyType = 'geographic' | 'temporal' | 'emotional' | 'curated' | 'shared';
-
-export type NarrativeRole = 'opening' | 'turning_point' | 'climax' | 'reflection';
-
-export type InsightType = 'pattern' | 'growth' | 'recurring_place' | 'mood_arc';
-
 export interface Database {
   public: {
     Tables: {
+
       users: {
         Row: {
           id: string;
@@ -58,162 +53,14 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['users']['Row'], 'id' | 'created_at' | 'updated_at' | 'invite_code'> & {
-          id?: string;
-          invite_code?: string;
-        };
-        Update: Partial<Database['public']['Tables']['users']['Insert']>;
-      };
-
-      posts: {
-        Row: {
+        Insert: Partial<Database['public']['Tables']['users']['Row']> & {
           id: string;
-          user_id: string;
-          image_url: string;
-          caption: string | null;
-          mood: MoodType | null;
-          latitude: number | null;
-          longitude: number | null;
-          location_name: string | null;
-          weather_condition: string | null;
-          temperature_c: number | null;
-          is_ghost: boolean;
-          ghost_expires_at: string | null;
-          visible_to: string[];
-          circle_visibility: string;
-          reaction_counts: Json;
-          view_count: number;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['posts']['Row'], 'id' | 'created_at' | 'reaction_counts' | 'view_count'>;
-        Update: Partial<Database['public']['Tables']['posts']['Insert']>;
-      };
-
-      friendships: {
-        Row: {
-          id: string;
-          user_id: string;
-          friend_id: string;
-          status: FriendshipStatus;
-          friendship_level: number;
-          xp_points: number;
-          streak_days: number;
-          last_interaction_at: string | null;
-          circle_label: string | null;
-          notes: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['friendships']['Row'], 'id' | 'created_at' | 'updated_at' | 'friendship_level' | 'xp_points' | 'streak_days'>;
-        Update: Partial<Database['public']['Tables']['friendships']['Insert']>;
-      };
-
-      reactions: {
-        Row: {
-          id: string;
-          post_id: string;
-          user_id: string;
-          emoji: string;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['reactions']['Row'], 'id' | 'created_at'>;
-        Update: never;
-      };
-
-      room_visits: {
-        Row: {
-          id: string;
-          visitor_id: string;
-          host_id: string;
-          visited_at: string;
-          duration_seconds: number | null;
-        };
-        Insert: Omit<Database['public']['Tables']['room_visits']['Row'], 'id'>;
-        Update: never;
-      };
-
-      photo_journeys: {
-        Row: {
-          id: string;
-          user_id: string;
-          journey_type: JourneyType;
-          title: string;
-          description: string | null;
-          cover_photo_id: string | null;
-          start_date: string;
-          end_date: string;
-          season: string | null;
-          month: number | null;
-          year: number | null;
-          dominant_mood: MoodType | null;
-          emotional_arc: Json | null;
-          mood_distribution: Json | null;
-          geographic_bounds: Json | null;
-          primary_location: string | null;
-          distance_miles: number | null;
-          shared_with_user_ids: string[];
-          overlapping_moments: number;
-          generated_by: string;
-          photo_count: number;
-          day_count: number;
-          is_public: boolean;
-          shared_with_friends: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['photo_journeys']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['photo_journeys']['Insert']>;
-      };
-
-      daily_prompts: {
-        Row: {
-          id: string;
-          prompt_text: string;
-          category: string;
-          mood_tags: string[];
-          season: string | null;
-          active_date: string | null;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['daily_prompts']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['daily_prompts']['Insert']>;
-      };
-
-      notifications: {
-        Row: {
-          id: string;
-          user_id: string;
-          type: string;
-          title: string;
-          body: string;
-          data: Json | null;
-          read_at: string | null;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
-      };
-    };
-
-    Views: {
-      friend_rooms: {
-        Row: {
-          friend_id: string;
           username: string;
-          display_name: string | null;
-          avatar_url: string | null;
           room_type: RoomType;
           room_theme: Json;
-          current_mood: MoodType | null;
-          is_online: boolean;
-          last_seen_at: string | null;
-          latest_post_at: string | null;
-          has_new_post: boolean;
-          friendship_level: number;
         };
+        Update: Partial<Database['public']['Tables']['users']['Row']>;
       };
-    };
 
       invite_codes: {
         Row: {
@@ -227,8 +74,56 @@ export interface Database {
           expires_at: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['invite_codes']['Row'], 'id' | 'created_at' | 'use_count'>;
-        Update: Partial<Database['public']['Tables']['invite_codes']['Insert']>;
+        Insert: Partial<Database['public']['Tables']['invite_codes']['Row']> & {
+          code: string;
+          created_by: string;
+        };
+        Update: Partial<Database['public']['Tables']['invite_codes']['Row']>;
+      };
+
+      friendships: {
+        Row: {
+          id: string;
+          user_id: string;
+          friend_id: string;
+          status: FriendshipStatus;
+          friendship_level: number;
+          xp_points: number;
+          streak_days: number;
+          last_interaction_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['friendships']['Row']> & {
+          user_id: string;
+          friend_id: string;
+          status: FriendshipStatus;
+        };
+        Update: Partial<Database['public']['Tables']['friendships']['Row']>;
+      };
+
+      posts: {
+        Row: {
+          id: string;
+          user_id: string;
+          image_url: string;
+          thumbnail_url: string | null;
+          storage_path: string;
+          note: string | null;
+          mood: MoodType | null;
+          development_status: string;
+          development_delay_mins: number;
+          developed_at: string | null;
+          reaction_counts: Json;
+          view_count: number;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['posts']['Row']> & {
+          user_id: string;
+          image_url: string;
+          storage_path: string;
+        };
+        Update: Partial<Database['public']['Tables']['posts']['Row']>;
       };
 
       post_recipients: {
@@ -242,20 +137,303 @@ export interface Database {
           reacted_at: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['post_recipients']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['post_recipients']['Insert']>;
+        Insert: Partial<Database['public']['Tables']['post_recipients']['Row']> & {
+          post_id: string;
+          recipient_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['post_recipients']['Row']>;
       };
+
+      reactions: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          emoji: string;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['reactions']['Row']> & {
+          post_id: string;
+          user_id: string;
+          emoji: string;
+        };
+        Update: never;
+      };
+
+      // ── Time Capsules ────────────────────────────────────────────────────────
+
+      capsules: {
+        Row: {
+          id: string;
+          creator_id: string;
+          title: string;
+          description: string | null;
+          cover_emoji: string;
+          unlock_type: string;
+          unlock_at: string | null;
+          milestone_label: string | null;
+          is_opened: boolean;
+          opened_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['capsules']['Row']> & {
+          creator_id: string;
+          title: string;
+          unlock_type: string;
+        };
+        Update: Partial<Database['public']['Tables']['capsules']['Row']>;
+      };
+
+      capsule_members: {
+        Row: {
+          id: string;
+          capsule_id: string;
+          user_id: string;
+          has_submitted: boolean;
+          joined_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['capsule_members']['Row']> & {
+          capsule_id: string;
+          user_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['capsule_members']['Row']>;
+      };
+
+      capsule_submissions: {
+        Row: {
+          id: string;
+          capsule_id: string;
+          user_id: string;
+          image_url: string | null;
+          thumbnail_url: string | null;
+          storage_path: string | null;
+          note: string | null;
+          submitted_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['capsule_submissions']['Row']> & {
+          capsule_id: string;
+          user_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['capsule_submissions']['Row']>;
+      };
+
+      // ── Scrapbooks ───────────────────────────────────────────────────────────
+
+      scrapbooks: {
+        Row: {
+          id: string;
+          creator_id: string;
+          title: string;
+          cover_emoji: string;
+          description: string | null;
+          is_finished: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['scrapbooks']['Row']> & {
+          creator_id: string;
+          title: string;
+        };
+        Update: Partial<Database['public']['Tables']['scrapbooks']['Row']>;
+      };
+
+      scrapbook_members: {
+        Row: {
+          id: string;
+          scrapbook_id: string;
+          user_id: string;
+          joined_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['scrapbook_members']['Row']> & {
+          scrapbook_id: string;
+          user_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['scrapbook_members']['Row']>;
+      };
+
+      scrapbook_pages: {
+        Row: {
+          id: string;
+          scrapbook_id: string;
+          page_number: number;
+          layout: string;
+          title: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['scrapbook_pages']['Row']> & {
+          scrapbook_id: string;
+          page_number: number;
+        };
+        Update: Partial<Database['public']['Tables']['scrapbook_pages']['Row']>;
+      };
+
+      scrapbook_items: {
+        Row: {
+          id: string;
+          page_id: string;
+          scrapbook_id: string;
+          creator_id: string;
+          image_url: string | null;
+          thumbnail_url: string | null;
+          storage_path: string | null;
+          note: string | null;
+          pos_x: number;
+          pos_y: number;
+          rotation: number;
+          scale: number;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['scrapbook_items']['Row']> & {
+          page_id: string;
+          scrapbook_id: string;
+          creator_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['scrapbook_items']['Row']>;
+      };
+
+      // ── Cork Boards ──────────────────────────────────────────────────────────
+
+      cork_boards: {
+        Row: {
+          id: string;
+          creator_id: string;
+          title: string;
+          cover_emoji: string;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['cork_boards']['Row']> & {
+          creator_id: string;
+          title: string;
+        };
+        Update: Partial<Database['public']['Tables']['cork_boards']['Row']>;
+      };
+
+      cork_board_members: {
+        Row: {
+          id: string;
+          board_id: string;
+          user_id: string;
+          joined_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['cork_board_members']['Row']> & {
+          board_id: string;
+          user_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['cork_board_members']['Row']>;
+      };
+
+      cork_board_items: {
+        Row: {
+          id: string;
+          board_id: string;
+          creator_id: string;
+          type: string;
+          image_url: string | null;
+          thumbnail_url: string | null;
+          storage_path: string | null;
+          note_text: string | null;
+          sticker_id: string | null;
+          color: string;
+          pos_x: number;
+          pos_y: number;
+          rotation: number;
+          z_index: number;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['cork_board_items']['Row']> & {
+          board_id: string;
+          creator_id: string;
+          type: string;
+        };
+        Update: Partial<Database['public']['Tables']['cork_board_items']['Row']>;
+      };
+
+      // ── Camera Passes ────────────────────────────────────────────────────────
+
+      camera_passes: {
+        Row: {
+          id: string;
+          creator_id: string;
+          title: string | null;
+          is_complete: boolean;
+          current_holder_id: string | null;
+          time_limit_hours: number | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['camera_passes']['Row']> & {
+          creator_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['camera_passes']['Row']>;
+      };
+
+      pass_participants: {
+        Row: {
+          id: string;
+          pass_id: string;
+          user_id: string;
+          order_index: number;
+          completed: boolean;
+          completed_at: string | null;
+        };
+        Insert: Partial<Database['public']['Tables']['pass_participants']['Row']> & {
+          pass_id: string;
+          user_id: string;
+          order_index: number;
+        };
+        Update: Partial<Database['public']['Tables']['pass_participants']['Row']>;
+      };
+
+      pass_shots: {
+        Row: {
+          id: string;
+          pass_id: string;
+          photographer_id: string;
+          image_url: string | null;
+          thumbnail_url: string | null;
+          storage_path: string;
+          note: string | null;
+          order_index: number;
+          taken_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['pass_shots']['Row']> & {
+          pass_id: string;
+          photographer_id: string;
+          storage_path: string;
+          order_index: number;
+        };
+        Update: Partial<Database['public']['Tables']['pass_shots']['Row']>;
+      };
+
+      // ── Desk Drops ───────────────────────────────────────────────────────────
+
+      desk_drops: {
+        Row: {
+          id: string;
+          sender_id: string;
+          recipient_id: string;
+          image_url: string | null;
+          thumbnail_url: string | null;
+          storage_path: string | null;
+          note: string | null;
+          is_discovered: boolean;
+          discovered_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['desk_drops']['Row']> & {
+          sender_id: string;
+          recipient_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['desk_drops']['Row']>;
+      };
+
+    };
+
+    Views: {
+      [_ in never]: never;
     };
 
     Functions: {
-      validate_invite_code: {
-        Args: { code: string };
-        Returns: { valid: boolean; owner_id: string | null };
-      };
-      get_neighborhood: {
-        Args: { user_id: string };
-        Returns: Database['public']['Views']['friend_rooms']['Row'][];
-      };
+      [_ in never]: never;
     };
 
     Enums: {

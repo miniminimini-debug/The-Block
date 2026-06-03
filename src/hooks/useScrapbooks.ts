@@ -172,25 +172,27 @@ export function useCreateScrapbook() {
     }) => {
       if (!userId) throw new Error('not authenticated');
 
-      const { data: book, error } = await supabase
-        .from('scrapbooks')
-        .insert({ creator_id: userId, title, cover_emoji: coverEmoji ?? '📒', description: description ?? null })
-        .select('id').single();
+      // Generate ID client-side so we never depend on SELECT-after-INSERT
+      const bookId = crypto.randomUUID();
 
-      if (error || !book) throw error ?? new Error('failed');
+      const { error } = await supabase
+        .from('scrapbooks')
+        .insert({ id: bookId, creator_id: userId, title, cover_emoji: coverEmoji ?? '📒', description: description ?? null });
+
+      if (error) throw error;
 
       const uniqueIds = Array.from(new Set([userId, ...memberIds]));
       const { error: memberError } = await supabase.from('scrapbook_members').insert(
-        uniqueIds.map((uid) => ({ scrapbook_id: book.id, user_id: uid })),
+        uniqueIds.map((uid) => ({ scrapbook_id: bookId, user_id: uid })),
       );
       if (memberError) throw memberError;
 
       const { error: pageError } = await supabase.from('scrapbook_pages').insert({
-        scrapbook_id: book.id, page_number: 1, layout: 'collage',
+        scrapbook_id: bookId, page_number: 1, layout: 'collage',
       });
       if (pageError) throw pageError;
 
-      return book.id as string;
+      return bookId;
     },
     onSuccess: () => {
       if (userId) qc.invalidateQueries({ queryKey: KEYS.myScrapbooks(userId) });

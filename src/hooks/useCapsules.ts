@@ -157,9 +157,13 @@ export function useCreateCapsule() {
     }) => {
       if (!userId) throw new Error('not authenticated');
 
-      const { data: capsule, error: capsuleError } = await supabase
+      // Generate ID client-side so we never depend on SELECT-after-INSERT
+      const capsuleId = crypto.randomUUID();
+
+      const { error: capsuleError } = await supabase
         .from('capsules')
         .insert({
+          id: capsuleId,
           creator_id: userId,
           title,
           description: description ?? null,
@@ -167,19 +171,17 @@ export function useCreateCapsule() {
           unlock_type: unlockType,
           unlock_at: unlockAt ?? null,
           milestone_label: milestoneLabel ?? null,
-        })
-        .select('id')
-        .single();
+        });
 
-      if (capsuleError || !capsule) throw capsuleError ?? new Error('failed to create capsule');
+      if (capsuleError) throw capsuleError;
 
       const uniqueIds = Array.from(new Set([userId, ...memberIds]));
       const { error: memberError } = await supabase
         .from('capsule_members')
-        .insert(uniqueIds.map((uid) => ({ capsule_id: capsule.id, user_id: uid })));
+        .insert(uniqueIds.map((uid) => ({ capsule_id: capsuleId, user_id: uid })));
 
       if (memberError) throw memberError;
-      return capsule.id as string;
+      return capsuleId;
     },
     onSuccess: () => {
       if (userId) qc.invalidateQueries({ queryKey: KEYS.myCapsules(userId) });
