@@ -5,6 +5,7 @@ import { Platform, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import {
@@ -92,6 +93,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
+      <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#08080F' }}>
         <QueryClientProvider client={queryClient}>
           <StatusBar style="light" />
@@ -99,6 +101,7 @@ export default function RootLayout() {
           <ToastContainer />
         </QueryClientProvider>
       </GestureHandlerRootView>
+      </SafeAreaProvider>
     </ErrorBoundary>
   );
 }
@@ -127,10 +130,9 @@ function RootNavigator() {
     }
   }, [isLoading, session, user, segments]);
 
-  if (isLoading) return <View style={{ flex: 1, backgroundColor: '#08080F' }} />;
-
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+      <Stack.Screen name="index" options={{ animation: 'none' }} />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
