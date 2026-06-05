@@ -1,3 +1,4 @@
+import { generateId } from '@lib/uuid';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import { supabase } from '@lib/supabase';
@@ -57,7 +58,7 @@ export function useCreatePost() {
     mutationFn: async (input: CreatePostInput) => {
       if (!userId) throw new Error('Not authenticated');
 
-      const postId = crypto.randomUUID();
+      const postId = generateId();
       const delayMins = delayToMinutes(input.developmentDelay);
 
       const { originalUrl, thumbnailUrl, path } = await uploadPostPhoto(

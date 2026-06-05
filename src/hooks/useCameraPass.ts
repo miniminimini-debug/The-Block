@@ -1,3 +1,4 @@
+import { generateId } from '@lib/uuid';
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@lib/supabase';
@@ -226,7 +227,7 @@ export function useTakePassShot(passId: string) {
       const currentIdx = participants.findIndex((p) => p.user_id === userId);
       const orderIndex = currentIdx;
 
-      const shotId = crypto.randomUUID();
+      const shotId = generateId();
       const { originalUrl, thumbnailUrl, path } = await uploadPassShot(userId, passId, shotId, imageUri);
 
       const { error: shotError } = await supabase.from('pass_shots').insert({

@@ -1,3 +1,4 @@
+import { generateId } from '@lib/uuid';
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@lib/supabase';
@@ -173,7 +174,7 @@ export function useCreateScrapbook() {
       if (!userId) throw new Error('not authenticated');
 
       // Generate ID client-side so we never depend on SELECT-after-INSERT
-      const bookId = crypto.randomUUID();
+      const bookId = generateId();
 
       const { error } = await supabase
         .from('scrapbooks')
@@ -222,7 +223,7 @@ export function useAddScrapbookItem(scrapbookId: string) {
       let storagePath: string | null = null;
 
       if (imageUri) {
-        const itemId = crypto.randomUUID();
+        const itemId = generateId();
         const result = await uploadScrapbookItem(userId, scrapbookId, itemId, imageUri);
         imageUrl = result.originalUrl;
         thumbnailUrl = result.thumbnailUrl;

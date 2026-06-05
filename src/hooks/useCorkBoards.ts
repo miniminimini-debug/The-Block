@@ -1,3 +1,4 @@
+import { generateId } from '@lib/uuid';
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@lib/supabase';
@@ -221,7 +222,7 @@ export function useAddBoardItem(boardId: string) {
       let storagePath: string | null = null;
 
       if (type === 'photo' && imageUri) {
-        const itemId = crypto.randomUUID();
+        const itemId = generateId();
         const result = await uploadPhoto({
           userId,
           bucket: 'photos',

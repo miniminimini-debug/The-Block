@@ -1,3 +1,4 @@
+import { generateId } from '@lib/uuid';
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@lib/supabase';
@@ -99,7 +100,7 @@ export function useSendDeskDrop() {
       let storagePath: string | null = null;
 
       if (imageUri) {
-        const dropId = crypto.randomUUID();
+        const dropId = generateId();
         const result = await uploadDeskDrop(userId, dropId, imageUri);
         imageUrl = result.originalUrl;
         thumbnailUrl = result.thumbnailUrl;

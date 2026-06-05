@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@lib/supabase';
 import { useAuthStore } from '@stores/auth.store';
 import { isDemoMode } from '@lib/demo';
+import { generateId } from '@lib/uuid';
 import { uploadCapsuleSubmission } from '@lib/storage';
 import type { Capsule, CapsuleSubmission } from '@types/models';
 
@@ -158,7 +159,7 @@ export function useCreateCapsule() {
       if (!userId) throw new Error('not authenticated');
 
       // Generate ID client-side so we never depend on SELECT-after-INSERT
-      const capsuleId = crypto.randomUUID();
+      const capsuleId = generateId();
 
       const { error: capsuleError } = await supabase
         .from('capsules')

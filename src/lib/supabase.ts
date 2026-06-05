@@ -14,12 +14,24 @@ const storage = Platform.OS === 'web'
   ? typeof window !== 'undefined' ? AsyncStorage : undefined
   : AsyncStorage;
 
+// Wrap fetch with a 10-second timeout so hanging requests fail with a real
+// error instead of silently hanging (common in Expo Go on slow networks).
+function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), 10_000);
+  return fetch(input, { ...init, signal: controller.signal })
+    .finally(() => clearTimeout(id));
+}
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+  },
+  global: {
+    fetch: fetchWithTimeout,
   },
   realtime: {
     params: { eventsPerSecond: 10 },

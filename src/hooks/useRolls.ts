@@ -1,3 +1,4 @@
+import { generateId } from '@lib/uuid';
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@lib/supabase';
@@ -221,7 +222,7 @@ export function useAddShot(rollId: string) {
       if (rollData.status !== 'active') throw new Error('roll is no longer active');
       if (rollData.shots_taken >= rollData.max_shots) throw new Error('roll is full');
 
-      const shotId = crypto.randomUUID();
+      const shotId = generateId();
       const shotNumber = rollData.shots_taken + 1;
 
       const { originalUrl, thumbnailUrl, path } = await uploadRollShot(userId, rollId, shotId, imageUri);

@@ -22,10 +22,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
-    // In production, send to error tracking (Sentry, etc.)
-    if (__DEV__) {
-      console.error('[ErrorBoundary]', error, info.componentStack);
-    }
+    console.error('[ErrorBoundary]', error.message, error.stack, info.componentStack);
   }
 
   reset = () => {
@@ -40,9 +37,14 @@ export class ErrorBoundary extends Component<Props, State> {
         <View style={styles.container}>
           <Text style={styles.emoji}>🌙</Text>
           <Text style={styles.title}>something went wrong</Text>
-          <Text style={styles.message}>
+          <Text style={styles.message} selectable>
             {this.state.error?.message ?? 'the block hit a quiet moment. tap to try again.'}
           </Text>
+          {this.state.error?.stack ? (
+            <Text style={[styles.message, { fontSize: 10, color: '#3D3D5E' }]} selectable numberOfLines={6}>
+              {this.state.error.stack.substring(0, 400)}
+            </Text>
+          ) : null}
           <Pressable onPress={this.reset} style={styles.btn}>
             <Text style={styles.btnText}>try again</Text>
           </Pressable>
